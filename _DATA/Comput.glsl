@@ -160,11 +160,11 @@ void ObjPlane( in TRay Ray, inout THit Hit )
 {
   float t;
 
-  if( Ray.Vec.y < 0 )
+  if ( Ray.Vec.y < 0 )
   {
     t = ( Ray.Pos.y - -1.001 ) / -Ray.Vec.y;
 
-    if( ( 0 < t ) && ( t < Hit.t ) )
+    if ( ( 0 < t ) && ( t < Hit.t ) )
     {
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
@@ -185,11 +185,11 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 
   D = Pow2( B ) - C;
 
-  if( D > 0 )
+  if ( D > 0 )
   {
     t = -B - sign( C ) * sqrt( D );
 
-    if( ( 0 < t ) && ( t < Hit.t ) )
+    if ( ( 0 < t ) && ( t < Hit.t ) )
     {
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
@@ -212,7 +212,7 @@ TRay MatSkyer( in TRay Ray, in THit Hit )
   Result.Vec = Ray.Vec;
   Result.Pos = Ray.Pos;
   Result.Wei = Ray.Wei;
-  Result.Emi = texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
+  Result.Emi = Ray.Emi + texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
 
   return Result;
 }
@@ -272,9 +272,11 @@ TRay MatWater( inout TRay Ray, in THit Hit )
 
 void Raytrace( inout TRay Ray )
 {
+  THit Hit;
+
   for ( int L = 1; L <= 5; L++ )
   {
-    THit Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
+    Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
 
     ///// 物体
 
