@@ -92,7 +92,7 @@ float Fresnel( in vec3 Vec, in vec3 Nor, in float IOR )
 
 //------------------------------------------------------------------------------
 
-uvec4 _RandSeed = uvec4( _WorkID.x, _WorkID.y, _WorkID.x+_WorkID.y, _WorkID.x*_WorkID.y );
+uvec4 _RandSeed;
 
 uint rotl( in uint x, in int k )
 {
@@ -225,8 +225,8 @@ TRay MatMirro( in TRay Ray, in THit Hit )
 
   Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
   Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
-  Result.Wei = Ray.Wei * vec3( 0.8, 0.8, 0.8 );
-  Result.Emi = vec3( 0, 0, 0 );
+  Result.Wei = Ray.Wei;
+  Result.Emi = Ray.Emi;
 
   return Result;
 }
@@ -235,7 +235,8 @@ TRay MatMirro( in TRay Ray, in THit Hit )
 
 TRay MatWater( inout TRay Ray, in THit Hit )
 {
-  float IOR;
+  TRay Result;
+  float IOR, F;
   vec4  Nor;
 
   if( dot( Ray.Vec.xyz, Hit.Nor.xyz ) < 0 )
@@ -249,21 +250,19 @@ TRay MatWater( inout TRay Ray, in THit Hit )
     Nor = -Hit.Nor;
   }
 
-  TRay Result;
-
-  float F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
+  F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
 
   if ( Rand() < F )
   {
     Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
     Result.Pos = Hit.Pos + _EmitShift * Nor;
     Result.Wei = Ray.Wei;
-    Result.Emi = vec3( 0, 0, 0 );
+    Result.Emi = Ray.Emi;
   } else {
     Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
     Result.Pos = Hit.Pos - _EmitShift * Nor;
     Result.Wei = Ray.Wei;
-    Result.Emi = vec3( 0, 0, 0 );
+    Result.Emi = Ray.Emi;
   }
 
   return Result;
