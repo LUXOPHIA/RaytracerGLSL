@@ -46,6 +46,8 @@ type
     _ImageY :Integer;
     _Comput :TGLComput;
     _Seeder :TGLCelIma2D_TInt32u4D;
+    _AccumN :TGLStoBuf<Integer>;
+    _Accumr :TGLCelIma2D_TAlphaColorF;
     _Imager :TGLCelIma2D_TAlphaColorF;
     _Camera :TGLStoBuf<TSingleM4>;
     _Textur :TGLCelTex2D_TAlphaColorF;
@@ -90,6 +92,8 @@ begin
      end;
 
      _Comput.Imagers.Add( '_Seeder', _Seeder );
+     _Comput.Buffers.Add( 'TAccumN', _AccumN );
+     _Comput.Imagers.Add( '_Accumr', _Accumr );
      _Comput.Imagers.Add( '_Imager', _Imager );
      _Comput.Buffers.Add( 'TCamera', _Camera );
      _Comput.Texturs.Add( '_Textur', _Textur );
@@ -127,6 +131,8 @@ begin
 
      _Comput := TGLComput               .Create;
      _Seeder := TGLCelIma2D_TInt32u4D   .Create;
+     _AccumN := TGLStoBuf<Integer>      .Create( GL_DYNAMIC_DRAW );
+     _Accumr := TGLCelIma2D_TAlphaColorF.Create;
      _Imager := TGLCelIma2D_TAlphaColorF.Create;
      _Camera := TGLStoBuf<TSingleM4>    .Create( GL_DYNAMIC_DRAW );
      _Textur := TGLCelTex2D_TAlphaColorF.Create;
@@ -134,6 +140,11 @@ begin
      InitComput;
 
      InitSeeder;
+
+     _AccumN[ 0 ] := 0;
+
+     _Accumr.Grid.CellsX := _ImageX;
+     _Accumr.Grid.CellsY := _ImageY;
 
      _Imager.Grid.CellsX := _ImageX;
      _Imager.Grid.CellsY := _ImageY;
@@ -144,6 +155,8 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
      _Comput.DisposeOf;
+     _AccumN.DisposeOf;
+     _Accumr.DisposeOf;
      _Imager.DisposeOf;
      _Camera.DisposeOf;
      _Textur.DisposeOf;
@@ -158,6 +171,8 @@ begin
                    * TSingleM4.Translate( 0, 0, 3 );
 
      _Comput.Run;
+
+     _AccumN[ 0 ] := _AccumN[ 0 ] + 16;
 
      _Imager.CopyTo( Image1.Bitmap );
 end;
@@ -181,6 +196,8 @@ begin
           _MouseA := _MouseA + ( P - _MouseP );
 
           _MouseP := P;
+
+          _AccumN[ 0 ] := 0;
      end;
 end;
 

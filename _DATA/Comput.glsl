@@ -121,6 +121,13 @@ float Rand()
 
 layout( rgba32ui ) uniform uimage2D _Seeder;
 
+layout( std430 ) buffer TAccumN
+{
+  int _AccumN;
+};
+
+layout( rgba32f ) uniform image2D _Accumr;
+
 writeonly uniform image2D _Imager;
 
 layout( std430 ) buffer TCamera
@@ -304,9 +311,10 @@ void main()
 
   _RandSeed = imageLoad( _Seeder, _WorkID.xy );
 
-  A = vec3( 0 );
+  if ( _AccumN == 0 ) A = vec3( 0 );
+                 else A = imageLoad( _Accumr, _WorkID.xy ).rgb;
 
-  for ( int N = 1; N <= 16; N++ )
+  for( uint N = _AccumN+1; N <= _AccumN+16; N++ )
   {
     E = vec4( 0, 0, 0, 1 );
 
@@ -326,6 +334,8 @@ void main()
 
     A += ( C - A ) / N;
   }
+
+  imageStore( _Accumr, _WorkID.xy, vec4( A, 1 ) );
 
   P = GammaCorrect( ToneMap( A, 10 ), 2.2 );
 
