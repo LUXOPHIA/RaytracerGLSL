@@ -45,11 +45,13 @@ type
     _ImageX :Integer;
     _ImageY :Integer;
     _Comput :TGLComput;
+    _Seeder :TGLCelIma2D_TInt32u4D;
     _Imager :TGLCelIma2D_TAlphaColorF;
     _Camera :TGLStoBuf<TSingleM4>;
     _Textur :TGLCelTex2D_TAlphaColorF;
     ///// メソッド
     procedure InitComput;
+    procedure InitSeeder;
   end;
 
 var
@@ -87,9 +89,31 @@ begin
           if Count > 0 then TabControl1.TabIndex := 1;
      end;
 
+     _Comput.Imagers.Add( '_Seeder', _Seeder );
      _Comput.Imagers.Add( '_Imager', _Imager );
      _Comput.Buffers.Add( 'TCamera', _Camera );
      _Comput.Texturs.Add( '_Textur', _Textur );
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TForm1.InitSeeder;
+var
+   R :IRandom32XOS128;
+   D :TGLCelPixIter2D<TInt32u4D>;
+   X, Y :Integer;
+begin
+     _Seeder.Grid.CellsX := _ImageX;
+     _Seeder.Grid.CellsY := _ImageY;
+
+     R := TRandom32XOS128x64ss.Create;
+
+     D := _Seeder.Grid.Map( GL_WRITE_ONLY );
+
+     for Y := 0 to _ImageY-1 do
+     for X := 0 to _ImageX-1 do D.Cells[ X, Y ] := R.DrawSeed;
+
+     D.DisposeOf;
 end;
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -102,11 +126,14 @@ begin
      _ImageY := 600;
 
      _Comput := TGLComput               .Create;
+     _Seeder := TGLCelIma2D_TInt32u4D   .Create;
      _Imager := TGLCelIma2D_TAlphaColorF.Create;
      _Camera := TGLStoBuf<TSingleM4>    .Create( GL_DYNAMIC_DRAW );
      _Textur := TGLCelTex2D_TAlphaColorF.Create;
 
      InitComput;
+
+     InitSeeder;
 
      _Imager.Grid.CellsX := _ImageX;
      _Imager.Grid.CellsY := _ImageY;

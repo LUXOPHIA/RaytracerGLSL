@@ -74,7 +74,52 @@ vec3 GammaCorrect( in vec3 Color, in float Gamma )
   return Result;
 }
 
+//------------------------------------------------------------------------------
+
+float Fresnel( in vec3 Vec, in vec3 Nor, in float IOR )
+{
+  // float N = Pow2( IOR );
+  // float C = dot( Vec, Nor );
+  // float G = sqrt( N + Pow2( C ) - 1 );
+  // float NC = N * C;
+  // return ( Pow2( (  C + G ) / (  C - G ) )
+  //        + Pow2( ( NC + G ) / ( NC - G ) ) ) / 2;
+
+  float R = Pow2( ( IOR - 1 ) / ( IOR + 1 ) );
+  float C = clamp( dot( Vec, Nor ), -1, 0 );
+  return R + ( 1 - R ) * pow( 1 + C, 5 );
+}
+
+//------------------------------------------------------------------------------
+
+uvec4 _RandSeed = uvec4( _WorkID.x, _WorkID.y, _WorkID.x+_WorkID.y, _WorkID.x*_WorkID.y );
+
+uint rotl( in uint x, in int k )
+{
+  return ( x << k ) | ( x >> ( 32 - k ) );
+}
+
+float Rand()
+{
+  const uint Result = rotl( _RandSeed[ 0 ] * 5, 7 ) * 9;
+
+  const uint t = _RandSeed[ 1 ] << 9;
+
+  _RandSeed[ 2 ] ^= _RandSeed[ 0 ];
+  _RandSeed[ 3 ] ^= _RandSeed[ 1 ];
+  _RandSeed[ 1 ] ^= _RandSeed[ 2 ];
+  _RandSeed[ 0 ] ^= _RandSeed[ 3 ];
+
+  _RandSeed[ 2 ] ^= t;
+
+  _RandSeed[ 3 ] = rotl( _RandSeed[ 3 ], 11 );
+
+  return float( Result ) / 4294967296.0;
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【外部変数】
+
+layout( rgba32ui ) uniform uimage2D _Seeder;
 
 writeonly uniform image2D _Imager;
 
@@ -149,7 +194,7 @@ void ObjSpher( in TRay Ray, inout THit Hit )
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
       Hit.Nor = Hit.Pos;
-      Hit.Mat = 1;
+      Hit.Mat = 2;
     }
   }
 }
@@ -180,8 +225,46 @@ TRay MatMirro( in TRay Ray, in THit Hit )
 
   Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
   Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
-  Result.Wei = Ray.Wei;
+  Result.Wei = Ray.Wei * vec3( 0.8, 0.8, 0.8 );
   Result.Emi = vec3( 0, 0, 0 );
+
+  return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TRay MatWater( inout TRay Ray, in THit Hit )
+{
+  float IOR;
+  vec4  Nor;
+
+  if( dot( Ray.Vec.xyz, Hit.Nor.xyz ) < 0 )
+  {
+    IOR = 1.333 / 1.000;
+    Nor = +Hit.Nor;
+  }
+  else
+  {
+    IOR = 1.000 / 1.333;
+    Nor = -Hit.Nor;
+  }
+
+  TRay Result;
+
+  float F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
+
+  if ( Rand() < F )
+  {
+    Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
+    Result.Pos = Hit.Pos + _EmitShift * Nor;
+    Result.Wei = Ray.Wei;
+    Result.Emi = vec3( 0, 0, 0 );
+  } else {
+    Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
+    Result.Pos = Hit.Pos - _EmitShift * Nor;
+    Result.Wei = Ray.Wei;
+    Result.Emi = vec3( 0, 0, 0 );
+  }
 
   return Result;
 }
@@ -190,19 +273,23 @@ TRay MatMirro( in TRay Ray, in THit Hit )
 
 void Raytrace( inout TRay Ray )
 {
-  THit Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
-
-  ///// 物体
-
-  ObjSpher( Ray, Hit );
-  ObjPlane( Ray, Hit );
-
-  ///// 材質
-
-  switch( Hit.Mat )
+  for ( int L = 1; L <= 5; L++ )
   {
-    case 0: Ray = MatSkyer( Ray, Hit ); return;
-    case 1: Ray = MatMirro( Ray, Hit ); break;
+    THit Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
+
+    ///// 物体
+
+    ObjSpher( Ray, Hit );
+    ObjPlane( Ray, Hit );
+
+    ///// 材質
+
+    switch( Hit.Mat )
+    {
+      case 0: Ray = MatSkyer( Ray, Hit ); return;
+      case 1: Ray = MatMirro( Ray, Hit ); break;
+      case 2: Ray = MatWater( Ray, Hit ); break;
+    }
   }
 }
 
@@ -212,29 +299,38 @@ void main()
 {
   vec4 E, S;
   TRay R;
-  vec3 A, B, C;
+  vec3 A, C, P;
 
-  E = vec4( 0, 0, 0, 1 );
+  _RandSeed = imageLoad( _Seeder, _WorkID.xy );
 
-  S.x = 4.0 * ( _WorkID.x + 0.5 ) / _WorksN.x - 2.0;
-  S.y = 1.5 - 3.0 * ( _WorkID.y + 0.5 ) / _WorksN.y;
-  S.z = -2;
-  S.w = 1;
+  A = vec3( 0 );
 
-  R.Pos = _Camera * E;
-  R.Vec = _Camera * normalize( S - E );
-  R.Wei = vec3( 1 );
-  R.Emi = vec3( 0 );
+  for ( int N = 1; N <= 16; N++ )
+  {
+    E = vec4( 0, 0, 0, 1 );
 
-  Raytrace( R );
+    S.x = 4.0 * ( _WorkID.x + 0.5 ) / _WorksN.x - 2.0;
+    S.y = 1.5 - 3.0 * ( _WorkID.y + 0.5 ) / _WorksN.y;
+    S.z = -2;
+    S.w = 1;
 
-  A = R.Wei * R.Emi;
+    R.Pos = _Camera * E;
+    R.Vec = _Camera * normalize( S - E );
+    R.Wei = vec3( 1 );
+    R.Emi = vec3( 0 );
 
-  B = ToneMap( A, 10 );
+    Raytrace( R );
 
-  C = GammaCorrect( B, 2.2 );
+    C = R.Wei * R.Emi;
 
-  imageStore( _Imager, _WorkID.xy, vec4( C, 1 ) );
+    A += ( C - A ) / N;
+  }
+
+  P = GammaCorrect( ToneMap( A, 10 ), 2.2 );
+
+  imageStore( _Imager, _WorkID.xy, vec4( P, 1 ) );
+
+  imageStore( _Seeder, _WorkID.xy, _RandSeed );
 }
 
 //############################################################################## ■
