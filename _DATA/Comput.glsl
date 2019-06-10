@@ -176,7 +176,7 @@ void ObjPlane( in TRay Ray, inout THit Hit )
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
       Hit.Nor = vec4( 0, 1, 0, 0 );
-      Hit.Mat = 1;
+      Hit.Mat = 3;
     }
   }
 }
@@ -275,6 +275,27 @@ TRay MatWater( inout TRay Ray, in THit Hit )
   return Result;
 }
 
+//------------------------------------------------------------------------------
+
+TRay MatDiffu( in TRay Ray, in THit Hit )
+{
+  TRay Result;
+
+  Result.Vec.y = sqrt( Rand() );
+
+  float d = sqrt( 1 - Pow2( Result.Vec.y ) );
+  float v = Rand();
+
+  Result.Vec.x = d * cos( Pi2 * v );
+  Result.Vec.z = d * sin( Pi2 * v );
+
+  Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
+  Result.Wei = Ray.Wei;
+  Result.Emi = Ray.Emi;
+
+  return Result;
+}
+
 //##############################################################################
 
 void Raytrace( inout TRay Ray )
@@ -297,6 +318,7 @@ void Raytrace( inout TRay Ray )
       case 0: Ray = MatSkyer( Ray, Hit ); return;
       case 1: Ray = MatMirro( Ray, Hit ); break;
       case 2: Ray = MatWater( Ray, Hit ); break;
+      case 3: Ray = MatDiffu( Ray, Hit ); break;
     }
   }
 }
