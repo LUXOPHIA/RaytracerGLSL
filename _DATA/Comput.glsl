@@ -302,10 +302,13 @@ bool HitRecta( in TRay Ray, out float HitT, in vec3 Cen, in vec3 Siz )
 
 //------------------------------------------------------------------------------
 
-void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi )
+const vec3  _GridsC =  vec3(  0,  0,  0 );
+const vec3  _GridsS =  vec3(  2,  2,  2 );
+const ivec3 _GridsN = ivec3( 10, 10, 10 );
+
+void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi, in float Rad )
 {
-  const float Rad = 2.0 / 10 / 2;
-  const vec3  Cen = 2.0 * ( Gi + 0.5 ) / 10 - 1;
+  const vec3  Cen = _GridsS.x * ( ( Gi + 0.5 ) / _GridsN.x - 0.5 );
 
   float B, C, D, t;
 
@@ -323,20 +326,16 @@ void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi )
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
       Hit.Nor = normalize( Hit.Pos - vec4( Cen, 1 ) );
-      Hit.Mat = 1;
+      Hit.Mat = 2;
     }
   }
 }
 
-void ObjUGrid( in TRay Ray, inout THit Hit )
+void ObjGrids( in TRay Ray, inout THit Hit )
 {
-  const vec3   Cen     = vec3( 0, 0, 0 );
-  const vec3   Siz     = vec3( 2, 2, 2 );
-  const ivec3 _VoxelsN = ivec3( 10, 10, 10 );
-
   float HitT;
 
-  if ( HitRecta( Ray, HitT, Cen, 0.9999 * Siz ) )
+  if ( HitRecta( Ray, HitT, _GridsC, 0.9999 * _GridsS ) )
   {
     vec4 HitP = Ray.Pos + HitT * Ray.Vec;
 
@@ -346,7 +345,7 @@ void ObjUGrid( in TRay Ray, inout THit Hit )
                        {    0, Gv.y,    0 },
                        {    0,    0, Gv.z } };
 
-    vec3 Sd = 2.0 / _VoxelsN;
+    vec3 Sd = _GridsS / _GridsN;
 
     vec3 Tv = Sd / abs( Ray.Vec.xyz );
 
@@ -362,26 +361,26 @@ void ObjUGrid( in TRay Ray, inout THit Hit )
 
     vec3 Ts;
 
-    if ( isinf( Tv.x ) ) Ts.x = 10000;
+    if ( isinf( Tv.x ) ) Ts.x = FLOAT_MAX;
                     else Ts.x = Tv.x * ( 0.5 + sign( Ray.Vec.x ) * ( 0.5 - Gd.x ) );
 
-    if ( isinf( Tv.y ) ) Ts.y = 10000;
+    if ( isinf( Tv.y ) ) Ts.y = FLOAT_MAX;
                     else Ts.y = Tv.y * ( 0.5 + sign( Ray.Vec.y ) * ( 0.5 - Gd.y ) );
 
-    if ( isinf( Tv.z ) ) Ts.z = 10000;
+    if ( isinf( Tv.z ) ) Ts.z = FLOAT_MAX;
                     else Ts.z = Tv.z * ( 0.5 + sign( Ray.Vec.z ) * ( 0.5 - Gd.z ) );
 
     float T0 = 0;
 
-    while ( ( 0 <= Gi.x ) && ( Gi.x < _VoxelsN.x )
-         && ( 0 <= Gi.y ) && ( Gi.y < _VoxelsN.y )
-         && ( 0 <= Gi.z ) && ( Gi.z < _VoxelsN.z ) )
+    while ( ( 0 <= Gi.x ) && ( Gi.x < _GridsN.x )
+         && ( 0 <= Gi.y ) && ( Gi.y < _GridsN.y )
+         && ( 0 <= Gi.z ) && ( Gi.z < _GridsN.z ) )
     {
       int K = MinI( Ts );
 
       float T1 = Ts[ K ];
 
-      ObjVoxel( Ray, Hit, Gi );
+      ObjVoxel( Ray, Hit, Gi, Sd.x / 2 * imageLoad( _Voxels, Gi ).a );
 
       T0 = T1;
 
@@ -493,7 +492,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjUGrid( Ray, Hit );
+    ObjGrids( Ray, Hit );
 
     ///// 材質
 
