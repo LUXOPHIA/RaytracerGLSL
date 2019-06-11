@@ -117,6 +117,22 @@ float Rand()
   return float( Result ) / 4294967296.0;
 }
 
+//------------------------------------------------------------------------------
+
+vec2 RandCirc()
+{
+  vec2 Result;
+  float T, R;
+
+  T = Pi2 * Rand();
+  R = sqrt( Rand() );
+
+  Result.x = R * cos( T );
+  Result.y = R * sin( T );
+
+  return Result;
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【外部変数】
 
 layout( rgba32ui ) uniform uimage2D _Seeder;
@@ -370,7 +386,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjRecta( Ray, Hit );
+    ObjSpher( Ray, Hit );
     ObjPlane( Ray, Hit );
 
     ///// 材質
@@ -401,6 +417,7 @@ void main()
   for( uint N = _AccumN+1; N <= _AccumN+16; N++ )
   {
     E = vec4( 0, 0, 0, 1 );
+    E.xy += 0.05 * RandCirc();
 
     S.x = 4.0 * ( _WorkID.x + 0.5 ) / _WorksN.x - 2.0;
     S.y = 1.5 - 3.0 * ( _WorkID.y + 0.5 ) / _WorksN.y;
