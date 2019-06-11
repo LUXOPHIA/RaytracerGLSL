@@ -206,6 +206,68 @@ void ObjSpher( in TRay Ray, inout THit Hit )
   }
 }
 
+//------------------------------------------------------------------------------
+
+bool Slab( in float Pos, in float Vec,
+           in float MinC, in float MaxC,
+           inout float MinT, inout float MaxT )
+{
+  float T0, T1;
+
+  if ( Vec > 0 ) {
+    T0 = ( MinC - Pos ) / Vec;
+    T1 = ( MaxC - Pos ) / Vec;
+  } else {
+    T0 = ( MaxC - Pos ) / Vec;
+    T1 = ( MinC - Pos ) / Vec;
+  }
+
+  if ( T1 < MaxT ) { MaxT = T1; }
+
+  if ( MinT < T0 ) { MinT = T0; return true; } else { return false; }
+}
+
+void ObjRecta( in TRay Ray, inout THit Hit )
+{
+  const vec3 MinC = vec3( -1, -1, -1 );
+  const vec3 MaxC = vec3( +1, +1, +1 );
+
+  float MinT, MaxT;
+  vec3 Nor;
+
+  MinT = -10000;
+  MaxT = +10000;
+
+  if ( Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
+  if ( Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
+  if ( Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
+
+  if( ( MinT < MaxT ) && ( 0 < MinT ) && ( MinT < Hit.t ) )
+  {
+    Hit.t   = MinT;
+    Hit.Pos = Ray.Pos + MinT * Ray.Vec;
+    Hit.Nor = vec4( Nor, 0 );
+    Hit.Mat = 1;
+  }
+}
+
+bool HitRecta( in TRay Ray, out float HitT )
+{
+  const vec3 MinC = vec3( -0.999, -0.999, -0.999 );
+  const vec3 MaxC = vec3( +0.999, +0.999, +0.999 );
+
+  float MinT, MaxT;
+
+  MinT = -10000;
+  MaxT = +10000;
+
+  Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT );
+  Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT );
+  Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT );
+
+  if( MinT < MaxT ) { HitT = MinT; return true; } else return false;
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
 
 float _EmitShift = 0.0001;
@@ -308,7 +370,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjSpher( Ray, Hit );
+    ObjRecta( Ray, Hit );
     ObjPlane( Ray, Hit );
 
     ///// 材質
