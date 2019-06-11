@@ -241,11 +241,8 @@ bool Slab( in float Pos, in float Vec,
   if ( MinT < T0 ) { MinT = T0; return true; } else { return false; }
 }
 
-void ObjRecta( in TRay Ray, inout THit Hit )
+void ObjRecta( in TRay Ray, inout THit Hit, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 Cen = vec3( 0, 0, 0 );
-  const vec3 Siz = vec3( 2, 2, 2 );
-
   float MinT, MaxT;
   vec3 Nor;
 
@@ -265,11 +262,8 @@ void ObjRecta( in TRay Ray, inout THit Hit )
   }
 }
 
-bool HitRecta( in TRay Ray, out float HitT )
+bool HitRecta( in TRay Ray, out float HitT, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 Cen = vec3( 0, 0, 0 );
-  const vec3 Siz = vec3( 2, 2, 2 );
-
   float MinT, MaxT;
 
   MinT = -FLOAT_MAX;
@@ -384,7 +378,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjSpher( Ray, Hit );
+    ObjRecta( Ray, Hit, vec3( 0 ), vec3( 2 ) );
     ObjPlane( Ray, Hit );
 
     ///// 材質
