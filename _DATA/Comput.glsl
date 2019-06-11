@@ -42,6 +42,27 @@ float length2( in vec3 V )
 
 //------------------------------------------------------------------------------
 
+int MinI( float A_, float B_, float C_ )
+{
+    if ( A_ <= B_ )
+    {
+        if ( A_ <= C_ ) return 0;
+                   else return 2;
+    }
+    else
+    {
+        if ( B_ <= C_ ) return 1;
+                   else return 2;
+    }
+}
+
+int MinI( vec3 V_ )
+{
+    return MinI( V_.x, V_.y, V_.z );
+}
+
+//------------------------------------------------------------------------------
+
 vec2 VecToSky( in vec3 Vec )
 {
   vec2 Result;
@@ -284,6 +305,97 @@ bool HitRecta( in TRay Ray, out float HitT )
   if( MinT < MaxT ) { HitT = MinT; return true; } else return false;
 }
 
+//------------------------------------------------------------------------------
+
+void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
+{
+  vec3 P;
+  float B, C, D, t;
+
+  P = ( Gi + 0.5 ) / 10.0 * 2.0 - 1.0;
+
+  B = dot( Ray.Pos.xyz - P, Ray.Vec.xyz );
+  C = length2( Ray.Pos.xyz - P ) - Pow2( 2.0 / 10.0 / 2.0 );
+
+  D = Pow2( B ) - C;
+
+  if ( D > 0 )
+  {
+    t = -B - sign( C ) * sqrt( D );
+
+    if ( ( 0 < t ) && ( t < Hit.t ) )
+    {
+      Hit.t   = t;
+      Hit.Pos = Ray.Pos + t * Ray.Vec;
+      Hit.Nor = normalize( Hit.Pos - vec4( P, 1 ) );
+      Hit.Mat = 1;
+    }
+  }
+}
+
+void ObjVolum( in TRay Ray, inout THit Hit )
+{
+  //ivec3 _VoxelsN = imageSize( _Voxels ) - ivec3( 1 );
+  ivec3 _VoxelsN = ivec3( 10, 10, 10 );
+
+  float HitT;
+
+  if ( HitRecta( Ray, HitT ) )
+  {
+    vec4 HitP = Ray.Pos + HitT * Ray.Vec;
+
+    ivec3 Gv = ivec3( sign( Ray.Vec.xyz ) );
+
+    ivec3 Gvs[ 3 ] = { { Gv.x,    0,    0 },
+                       {    0, Gv.y,    0 },
+                       {    0,    0, Gv.z } };
+
+    vec3 Sd = 2.0 / _VoxelsN;
+
+    vec3 Tv = Sd / abs( Ray.Vec.xyz );
+
+    vec3 Tvs[ 3 ] = { { Tv.x,    0,    0 },
+                      {    0, Tv.y,    0 },
+                      {    0,    0, Tv.z } };
+
+    vec3 G = ( HitP.xyz + vec3( 1 ) ) / Sd;
+
+    ivec3 Gi = ivec3( floor( G ) );
+
+    vec3 Gd = G - Gi;
+
+    vec3 Ts;
+
+    if ( isinf( Tv.x ) ) Ts.x = 10000;
+                    else Ts.x = Tv.x * ( 0.5 + sign( Ray.Vec.x ) * ( 0.5 - Gd.x ) );
+
+    if ( isinf( Tv.y ) ) Ts.y = 10000;
+                    else Ts.y = Tv.y * ( 0.5 + sign( Ray.Vec.y ) * ( 0.5 - Gd.y ) );
+
+    if ( isinf( Tv.z ) ) Ts.z = 10000;
+                    else Ts.z = Tv.z * ( 0.5 + sign( Ray.Vec.z ) * ( 0.5 - Gd.z ) );
+
+    float T0 = 0;
+
+    while ( ( 0 <= Gi.x ) && ( Gi.x < _VoxelsN.x )
+         && ( 0 <= Gi.y ) && ( Gi.y < _VoxelsN.y )
+         && ( 0 <= Gi.z ) && ( Gi.z < _VoxelsN.z ) )
+    {
+      int K = MinI( Ts );
+
+      float T1 = Ts[ K ];
+
+      ObjVoxel( Gi, Ray, Hit );
+      //ObjSpher( Ray, Hit );
+
+      T0 = T1;
+
+      Gi += Gvs[ K ];
+      Ts += Tvs[ K ];
+    }
+  }
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
 
 float _EmitShift = 0.0001;
@@ -386,8 +498,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjSpher( Ray, Hit );
-    ObjPlane( Ray, Hit );
+    ObjVolum( Ray, Hit );
 
     ///// 材質
 
