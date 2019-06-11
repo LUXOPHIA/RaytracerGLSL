@@ -22,9 +22,10 @@
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【定数】
 
-const float Pi  = 3.141592653589793;
-const float Pi2 = Pi * 2.0;
-const float P2i = Pi / 2.0;
+const float Pi        = 3.141592653589793;
+const float Pi2       = Pi * 2.0;
+const float P2i       = Pi / 2.0;
+const float FLOAT_MAX = 3.402823e+38;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
@@ -246,18 +247,15 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 //------------------------------------------------------------------------------
 
 bool Slab( in float Pos, in float Vec,
-           in float MinC, in float MaxC,
+           in float Cen, in float Siz,
            inout float MinT, inout float MaxT )
 {
-  float T0, T1;
+  float S, T0, T1;
 
-  if ( Vec > 0 ) {
-    T0 = ( MinC - Pos ) / Vec;
-    T1 = ( MaxC - Pos ) / Vec;
-  } else {
-    T0 = ( MaxC - Pos ) / Vec;
-    T1 = ( MinC - Pos ) / Vec;
-  }
+  S = sign( Vec );
+
+  T0 = ( Cen - S * Siz/2 - Pos ) / Vec;
+  T1 = ( Cen + S * Siz/2 - Pos ) / Vec;
 
   if ( T1 < MaxT ) { MaxT = T1; }
 
@@ -266,18 +264,18 @@ bool Slab( in float Pos, in float Vec,
 
 void ObjRecta( in TRay Ray, inout THit Hit )
 {
-  const vec3 MinC = vec3( -1, -1, -1 );
-  const vec3 MaxC = vec3( +1, +1, +1 );
+  const vec3 Cen = vec3( 0, 0, 0 );
+  const vec3 Siz = vec3( 2, 2, 2 );
 
   float MinT, MaxT;
   vec3 Nor;
 
-  MinT = -10000;
-  MaxT = +10000;
+  MinT = -FLOAT_MAX;
+  MaxT = +FLOAT_MAX;
 
-  if ( Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
-  if ( Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
-  if ( Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
+  if ( Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
+  if ( Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
+  if ( Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
 
   if( ( MinT < MaxT ) && ( 0 < MinT ) && ( MinT < Hit.t ) )
   {
@@ -290,17 +288,17 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 bool HitRecta( in TRay Ray, out float HitT )
 {
-  const vec3 MinC = vec3( -0.999, -0.999, -0.999 );
-  const vec3 MaxC = vec3( +0.999, +0.999, +0.999 );
+  const vec3 Cen = vec3( 0, 0, 0 );
+  const vec3 Siz = vec3( 2, 2, 2 );
 
   float MinT, MaxT;
 
-  MinT = -10000;
-  MaxT = +10000;
+  MinT = -FLOAT_MAX;
+  MaxT = +FLOAT_MAX;
 
-  Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT );
-  Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT );
-  Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT );
+  Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT );
+  Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT );
+  Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT );
 
   if( MinT < MaxT ) { HitT = MinT; return true; } else return false;
 }
@@ -494,7 +492,7 @@ void Raytrace( inout TRay Ray )
 
   for ( int L = 1; L <= 5; L++ )
   {
-    Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
+    Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
 
     ///// 物体
 
