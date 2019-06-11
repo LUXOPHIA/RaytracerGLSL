@@ -22,9 +22,10 @@
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【定数】
 
-const float Pi  = 3.141592653589793;
-const float Pi2 = Pi * 2.0;
-const float P2i = Pi / 2.0;
+const float Pi        = 3.141592653589793;
+const float Pi2       = Pi * 2.0;
+const float P2i       = Pi / 2.0;
+const float FLOAT_MAX = 3.402823e+38;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
@@ -249,38 +250,32 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 //------------------------------------------------------------------------------
 
 bool Slab( in float Pos, in float Vec,
-           in float MinC, in float MaxC,
+           in float Cen, in float Siz,
            inout float MinT, inout float MaxT )
 {
-  float T0, T1;
+  float S, T0, T1;
 
-  if ( Vec > 0 ) {
-    T0 = ( MinC - Pos ) / Vec;
-    T1 = ( MaxC - Pos ) / Vec;
-  } else {
-    T0 = ( MaxC - Pos ) / Vec;
-    T1 = ( MinC - Pos ) / Vec;
-  }
+  S = sign( Vec );
+
+  T0 = ( Cen - S * Siz/2 - Pos ) / Vec;
+  T1 = ( Cen + S * Siz/2 - Pos ) / Vec;
 
   if ( T1 < MaxT ) { MaxT = T1; }
 
   if ( MinT < T0 ) { MinT = T0; return true; } else { return false; }
 }
 
-void ObjRecta( in TRay Ray, inout THit Hit )
+void ObjRecta( in TRay Ray, inout THit Hit, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 MinC = vec3( -1, -1, -1 );
-  const vec3 MaxC = vec3( +1, +1, +1 );
-
   float MinT, MaxT;
   vec3 Nor;
 
-  MinT = -10000;
-  MaxT = +10000;
+  MinT = -FLOAT_MAX;
+  MaxT = +FLOAT_MAX;
 
-  if ( Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
-  if ( Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
-  if ( Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
+  if ( Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
+  if ( Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
+  if ( Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
 
   if( ( MinT < MaxT ) && ( 0 < MinT ) && ( MinT < Hit.t ) )
   {
@@ -291,34 +286,31 @@ void ObjRecta( in TRay Ray, inout THit Hit )
   }
 }
 
-bool HitRecta( in TRay Ray, out float HitT )
+bool HitRecta( in TRay Ray, out float HitT, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 MinC = vec3( -0.999, -0.999, -0.999 );
-  const vec3 MaxC = vec3( +0.999, +0.999, +0.999 );
-
   float MinT, MaxT;
 
-  MinT = -10000;
-  MaxT = +10000;
+  MinT = -FLOAT_MAX;
+  MaxT = +FLOAT_MAX;
 
-  Slab( Ray.Pos.x, Ray.Vec.x, MinC.x, MaxC.x, MinT, MaxT );
-  Slab( Ray.Pos.y, Ray.Vec.y, MinC.y, MaxC.y, MinT, MaxT );
-  Slab( Ray.Pos.z, Ray.Vec.z, MinC.z, MaxC.z, MinT, MaxT );
+  Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT );
+  Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT );
+  Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT );
 
   if( MinT < MaxT ) { HitT = MinT; return true; } else return false;
 }
 
 //------------------------------------------------------------------------------
 
-void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
+void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi )
 {
-  vec3 P;
+  const float Rad = 2.0 / 10 / 2;
+  const vec3  Cen = 2.0 * ( Gi + 0.5 ) / 10 - 1;
+
   float B, C, D, t;
 
-  P = ( Gi + 0.5 ) / 10.0 * 2.0 - 1.0;
-
-  B = dot( Ray.Pos.xyz - P, Ray.Vec.xyz );
-  C = length2( Ray.Pos.xyz - P ) - Pow2( 2.0 / 10.0 / 2.0 );
+  B = dot( Ray.Pos.xyz - Cen, Ray.Vec.xyz );
+  C = length2( Ray.Pos.xyz - Cen ) - Pow2( Rad );
 
   D = Pow2( B ) - C;
 
@@ -330,17 +322,21 @@ void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
     {
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
-      Hit.Nor = normalize( Hit.Pos - vec4( P, 1 ) );
+      Hit.Nor = normalize( Hit.Pos - vec4( Cen, 1 ) );
       Hit.Mat = 1;
     }
   }
 }
 
-void ObjVolum( in TRay Ray, inout THit Hit )
+void ObjUGrid( in TRay Ray, inout THit Hit )
 {
+  const vec3   Cen     = vec3( 0, 0, 0 );
+  const vec3   Siz     = vec3( 2, 2, 2 );
+  const ivec3 _VoxelsN = ivec3( 10, 10, 10 );
+
   float HitT;
 
-  if ( HitRecta( Ray, HitT ) )
+  if ( HitRecta( Ray, HitT, Cen, 0.9999 * Siz ) )
   {
     vec4 HitP = Ray.Pos + HitT * Ray.Vec;
 
@@ -385,7 +381,7 @@ void ObjVolum( in TRay Ray, inout THit Hit )
 
       float T1 = Ts[ K ];
 
-      ObjVoxel( Gi, Ray, Hit );
+      ObjVoxel( Ray, Hit, Gi );
 
       T0 = T1;
 
@@ -493,11 +489,11 @@ void Raytrace( inout TRay Ray )
 
   for ( int L = 1; L <= 5; L++ )
   {
-    Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
+    Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
 
     ///// 物体
 
-    ObjVolum( Ray, Hit );
+    ObjUGrid( Ray, Hit );
 
     ///// 材質
 
@@ -515,8 +511,6 @@ void Raytrace( inout TRay Ray )
 
 void main()
 {
-  _VoxelsN = ivec3( 10, 10, 10 ); //= imageSize( _Voxels );
-
   vec4 E, S;
   TRay R;
   vec3 A, C, P;
