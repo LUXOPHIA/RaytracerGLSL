@@ -14,11 +14,14 @@ uses
   LUX.GPU.OpenGL.Atom.Buffer.StoBuf,
   LUX.GPU.OpenGL.Atom.Buffer.PixBuf.D1,
   LUX.GPU.OpenGL.Atom.Buffer.PixBuf.D2,
+  LUX.GPU.OpenGL.Atom.Buffer.PixBuf.D3,
   LUX.GPU.OpenGL.Atom.Imager,
   LUX.GPU.OpenGL.Atom.Imager.D1.Preset,
   LUX.GPU.OpenGL.Atom.Imager.D2.Preset,
+  LUX.GPU.OpenGL.Atom.Imager.D3.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D1.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D2.Preset,
+  LUX.GPU.OpenGL.Atom.Textur.D3.Preset,
   LUX.GPU.OpenGL.Comput;
 
 type
@@ -51,9 +54,11 @@ type
     _Imager :TGLCelIma2D_TAlphaColorF;
     _Camera :TGLStoBuf<TSingleM4>;
     _Textur :TGLCelTex2D_TAlphaColorF;
+    _Voxels :TGLCelIma3D_TAlphaColorF;
     ///// メソッド
     procedure InitComput;
     procedure InitSeeder;
+    procedure InitVoxels;
   end;
 
 var
@@ -97,6 +102,7 @@ begin
      _Comput.Imagers.Add( '_Imager', _Imager );
      _Comput.Buffers.Add( 'TCamera', _Camera );
      _Comput.Texturs.Add( '_Textur', _Textur );
+     _Comput.Imagers.Add( '_Voxels', _Voxels );
 end;
 
 //------------------------------------------------------------------------------
@@ -120,6 +126,36 @@ begin
      D.DisposeOf;
 end;
 
+//------------------------------------------------------------------------------
+
+procedure TForm1.InitVoxels;
+var
+   D :TGLCelPixIter3D<TAlphaColorF>;
+   X, Y, Z :Integer;
+begin
+     with _Voxels.Grid do
+     begin
+          CellsX := 10;
+          CellsY := 10;
+          CellsZ := 10;
+
+          D := Map( GL_WRITE_ONLY );
+
+          for Z := 0 to CellsZ-1 do
+          begin
+               for Y := 0 to CellsY-1 do
+               begin
+                    for X := 0 to CellsX-1 do
+                    begin
+                         D.Cells[ X, Y, Z ] := TAlphaColorF.Create( Random, Random, Random, Random );
+                    end;
+               end;
+          end;
+
+          D.DisposeOf;
+     end;
+end;
+
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -136,6 +172,7 @@ begin
      _Imager := TGLCelIma2D_TAlphaColorF.Create;
      _Camera := TGLStoBuf<TSingleM4>    .Create( GL_DYNAMIC_DRAW );
      _Textur := TGLCelTex2D_TAlphaColorF.Create;
+     _Voxels := TGLCelIma3D_TAlphaColorF.Create;
 
      InitComput;
 
@@ -150,6 +187,8 @@ begin
      _Imager.Grid.CellsY := _ImageY;
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
+
+     InitVoxels;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -160,6 +199,7 @@ begin
      _Imager.DisposeOf;
      _Camera.DisposeOf;
      _Textur.DisposeOf;
+     _Voxels.DisposeOf;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

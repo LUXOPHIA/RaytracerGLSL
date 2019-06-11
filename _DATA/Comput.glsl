@@ -174,6 +174,9 @@ layout( std430 ) buffer TCamera
 
 uniform sampler2D _Textur;
 
+layout( rgba32f ) uniform image3D _Voxels;
+uvec3 _VoxelsN;
+
 //############################################################################## ■
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TRay
@@ -335,9 +338,6 @@ void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
 
 void ObjVolum( in TRay Ray, inout THit Hit )
 {
-  //ivec3 _VoxelsN = imageSize( _Voxels ) - ivec3( 1 );
-  ivec3 _VoxelsN = ivec3( 10, 10, 10 );
-
   float HitT;
 
   if ( HitRecta( Ray, HitT ) )
@@ -386,7 +386,6 @@ void ObjVolum( in TRay Ray, inout THit Hit )
       float T1 = Ts[ K ];
 
       ObjVoxel( Gi, Ray, Hit );
-      //ObjSpher( Ray, Hit );
 
       T0 = T1;
 
@@ -516,6 +515,8 @@ void Raytrace( inout TRay Ray )
 
 void main()
 {
+  _VoxelsN = ivec3( 10, 10, 10 ); //= imageSize( _Voxels );
+
   vec4 E, S;
   TRay R;
   vec3 A, C, P;
