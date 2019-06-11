@@ -262,11 +262,8 @@ bool Slab( in float Pos, in float Vec,
   if ( MinT < T0 ) { MinT = T0; return true; } else { return false; }
 }
 
-void ObjRecta( in TRay Ray, inout THit Hit )
+void ObjRecta( in TRay Ray, inout THit Hit, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 Cen = vec3( 0, 0, 0 );
-  const vec3 Siz = vec3( 2, 2, 2 );
-
   float MinT, MaxT;
   vec3 Nor;
 
@@ -286,11 +283,8 @@ void ObjRecta( in TRay Ray, inout THit Hit )
   }
 }
 
-bool HitRecta( in TRay Ray, out float HitT )
+bool HitRecta( in TRay Ray, out float HitT, in vec3 Cen, in vec3 Siz )
 {
-  const vec3 Cen = vec3( 0, 0, 0 );
-  const vec3 Siz = vec3( 2, 2, 2 );
-
   float MinT, MaxT;
 
   MinT = -FLOAT_MAX;
@@ -305,15 +299,15 @@ bool HitRecta( in TRay Ray, out float HitT )
 
 //------------------------------------------------------------------------------
 
-void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
+void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi )
 {
-  vec3 P;
+  const float Rad = 2.0 / 10 / 2;
+  const vec3  Cen = 2.0 * ( Gi + 0.5 ) / 10 - 1;
+
   float B, C, D, t;
 
-  P = ( Gi + 0.5 ) / 10.0 * 2.0 - 1.0;
-
-  B = dot( Ray.Pos.xyz - P, Ray.Vec.xyz );
-  C = length2( Ray.Pos.xyz - P ) - Pow2( 2.0 / 10.0 / 2.0 );
+  B = dot( Ray.Pos.xyz - Cen, Ray.Vec.xyz );
+  C = length2( Ray.Pos.xyz - Cen ) - Pow2( Rad );
 
   D = Pow2( B ) - C;
 
@@ -325,20 +319,21 @@ void ObjVoxel( in ivec3 Gi, in TRay Ray, inout THit Hit )
     {
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
-      Hit.Nor = normalize( Hit.Pos - vec4( P, 1 ) );
+      Hit.Nor = normalize( Hit.Pos - vec4( Cen, 1 ) );
       Hit.Mat = 1;
     }
   }
 }
 
-void ObjVolum( in TRay Ray, inout THit Hit )
+void ObjUGrid( in TRay Ray, inout THit Hit )
 {
-  //ivec3 _VoxelsN = imageSize( _Voxels ) - ivec3( 1 );
-  ivec3 _VoxelsN = ivec3( 10, 10, 10 );
+  const vec3   Cen     = vec3( 0, 0, 0 );
+  const vec3   Siz     = vec3( 2, 2, 2 );
+  const ivec3 _VoxelsN = ivec3( 10, 10, 10 );
 
   float HitT;
 
-  if ( HitRecta( Ray, HitT ) )
+  if ( HitRecta( Ray, HitT, Cen, 0.9999 * Siz ) )
   {
     vec4 HitP = Ray.Pos + HitT * Ray.Vec;
 
@@ -383,8 +378,7 @@ void ObjVolum( in TRay Ray, inout THit Hit )
 
       float T1 = Ts[ K ];
 
-      ObjVoxel( Gi, Ray, Hit );
-      //ObjSpher( Ray, Hit );
+      ObjVoxel( Ray, Hit, Gi );
 
       T0 = T1;
 
@@ -496,7 +490,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjVolum( Ray, Hit );
+    ObjUGrid( Ray, Hit );
 
     ///// 材質
 
