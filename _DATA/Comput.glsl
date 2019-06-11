@@ -176,7 +176,6 @@ layout( std430 ) buffer TCamera
 uniform sampler2D _Textur;
 
 layout( rgba32f ) uniform image3D _Voxels;
-uvec3 _VoxelsN;
 
 //############################################################################## ■
 
