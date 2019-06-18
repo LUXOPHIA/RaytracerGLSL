@@ -336,7 +336,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
 
   if ( HitRecta( Ray, HitT, _GridsC, 0.9999 * _GridsS ) )
   {
-    vec4 HitP = Ray.Pos + HitT * Ray.Vec;
+    vec4 RayP = max( HitT, 0 ) * Ray.Vec + Ray.Pos;
 
     ivec3 Gv = ivec3( sign( Ray.Vec.xyz ) );
 
@@ -352,7 +352,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
                       {    0, Tv.y,    0 },
                       {    0,    0, Tv.z } };
 
-    vec3 G = ( HitP.xyz + vec3( 1 ) ) / Sd;
+    vec3 G = ( RayP.xyz + vec3( 1 ) ) / Sd;
 
     ivec3 Gi = ivec3( floor( G ) );
 
