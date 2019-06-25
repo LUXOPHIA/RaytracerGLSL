@@ -336,7 +336,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
 
   if ( HitRecta( Ray, HitT, _GridsC, 0.9999 * _GridsS ) )
   {
-    vec4 RayP = max( HitT, 0 ) * Ray.Vec + Ray.Pos;
+    vec4 HitP = max( HitT, 0 ) * Ray.Vec + Ray.Pos;
 
     ivec3 Gv = ivec3( sign( Ray.Vec.xyz ) );
 
