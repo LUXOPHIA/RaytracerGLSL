@@ -307,7 +307,7 @@ const ivec3 _GridsN = ivec3( 10, 10, 10 );
 
 void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi, in float Rad )
 {
-  const vec3  Cen = _GridsS.x * ( ( Gi + 0.5 ) / _GridsN.x - 0.5 );
+  const vec3  Cen = _GridsS * ( ( Gi + 0.5 ) / _GridsN - vec3( 0.5 ) );
 
   float B, C, D, t;
 
@@ -352,7 +352,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
                       {    0, Tv.y,    0 },
                       {    0,    0, Tv.z } };
 
-    vec3 G = ( RayP.xyz + vec3( 1 ) ) / Sd;
+    vec3 G = ( HitP.xyz + _GridsS / 2 ) / Sd;
 
     ivec3 Gi = ivec3( floor( G ) );
 
