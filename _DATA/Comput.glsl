@@ -352,7 +352,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
                       {    0, Tv.y,    0 },
                       {    0,    0, Tv.z } };
 
-    vec3 G = ( HitP.xyz + _GridsS / 2 ) / Sd;
+    vec3 G = ( HitP.xyz - _GridsC + _GridsS / 2 ) / Sd;
 
     ivec3 Gi = ivec3( floor( G ) );
 
