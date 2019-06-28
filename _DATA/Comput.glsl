@@ -246,16 +246,20 @@ void ObjPlane( in TRay Ray, inout THit Hit )
 
 void ObjSpher( in TRay Ray, inout THit Hit )
 {
-  float B, C, D, t;
+  BeginMove( Ray );
 
-  B = dot( Ray.Pos.xyz, Ray.Vec.xyz );
+  float L, B, C, D, t;
+
+  L = length( Ray.Vec.xyz );
+
+  B = dot( Ray.Pos.xyz, Ray.Vec.xyz / L );
   C = length2( Ray.Pos.xyz ) - 1;
 
   D = Pow2( B ) - C;
 
   if ( D > 0 )
   {
-    t = -B - sign( C ) * sqrt( D );
+    t = ( -B - sign( C ) * sqrt( D ) ) / L;
 
     if ( ( 0 < t ) && ( t < Hit.t ) )
     {
@@ -263,6 +267,8 @@ void ObjSpher( in TRay Ray, inout THit Hit )
       Hit.Pos = Ray.Pos + t * Ray.Vec;
       Hit.Nor = Hit.Pos;
       Hit.Mat = 2;
+
+      EndMove( Hit );
     }
   }
 }
@@ -326,31 +332,6 @@ const vec3  _GridsC =  vec3(  0,  0,  0 );
 const vec3  _GridsS =  vec3(  2,  2,  2 );
 const ivec3 _GridsN = ivec3( 10, 10, 10 );
 
-void ObjVoxel( in TRay Ray, inout THit Hit, in ivec3 Gi, in float Rad )
-{
-  const vec3  Cen = _GridsS * ( ( Gi + 0.5 ) / _GridsN - vec3( 0.5 ) );
-
-  float B, C, D, t;
-
-  B = dot( Ray.Pos.xyz - Cen, Ray.Vec.xyz );
-  C = length2( Ray.Pos.xyz - Cen ) - Pow2( Rad );
-
-  D = Pow2( B ) - C;
-
-  if ( D > 0 )
-  {
-    t = -B - sign( C ) * sqrt( D );
-
-    if ( ( 0 < t ) && ( t < Hit.t ) )
-    {
-      Hit.t   = t;
-      Hit.Pos = Ray.Pos + t * Ray.Vec;
-      Hit.Nor = normalize( Hit.Pos - vec4( Cen, 1 ) );
-      Hit.Mat = 2;
-    }
-  }
-}
-
 void ObjGrids( in TRay Ray, inout THit Hit )
 {
   float HitT;
@@ -400,7 +381,15 @@ void ObjGrids( in TRay Ray, inout THit Hit )
 
       float T1 = Ts[ K ];
 
-      ObjVoxel( Ray, Hit, Gi, Sd.x / 2 * imageLoad( _Voxels, Gi ).a );
+      vec3 R = Sd / 2 * imageLoad( _Voxels, Gi ).rgb;
+      vec3 C = _GridsC + _GridsS * ( ( Gi + 0.5 ) / _GridsN - vec3( 0.5 ) );
+
+      _ObjMove = mat4( R.x,    0,    0,  0,
+                         0,  R.y,    0,  0,
+                         0,    0,  R.z,  0,
+                       C.x,  C.y,  C.z,  1 );
+
+      ObjSpher( Ray, Hit );
 
       T0 = T1;
 
