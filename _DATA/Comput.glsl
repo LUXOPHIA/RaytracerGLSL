@@ -203,6 +203,27 @@ struct THit
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【物体】
 
+mat4 _ObjMove = mat4( 1 );
+mat4 _ObjMovi = mat4( 1 );
+
+void BeginMove( inout TRay Ray )
+{
+  _ObjMovi = inverse( _ObjMove );
+
+  Ray.Pos = _ObjMovi * Ray.Pos;
+  Ray.Vec = _ObjMovi * Ray.Vec;
+}
+
+void EndMove( inout THit Hit )
+{
+  mat3 ObjMovn = transpose( mat3( _ObjMovi ) );
+
+  Hit.Pos     = _ObjMove * Hit.Pos    ;
+  Hit.Nor.xyz =  ObjMovn * Hit.Nor.xyz;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void ObjPlane( in TRay Ray, inout THit Hit )
 {
   float t;
