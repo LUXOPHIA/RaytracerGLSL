@@ -244,7 +244,7 @@ void ObjPlane( in TRay Ray, inout THit Hit )
 
 //------------------------------------------------------------------------------
 
-void ObjSpher( in TRay Ray, inout THit Hit )
+bool ObjSpher( in TRay Ray, inout THit Hit )
 {
   BeginMove( Ray );
 
@@ -269,8 +269,12 @@ void ObjSpher( in TRay Ray, inout THit Hit )
       Hit.Mat = 2;
 
       EndMove( Hit );
+
+      return true;
     }
   }
+
+  return false;
 }
 
 //------------------------------------------------------------------------------
@@ -389,7 +393,7 @@ void ObjGrids( in TRay Ray, inout THit Hit )
                          0,    0,  R.z,  0,
                        C.x,  C.y,  C.z,  1 );
 
-      ObjSpher( Ray, Hit );
+      if ( ObjSpher( Ray, Hit ) ) break;
 
       T0 = T1;
 
