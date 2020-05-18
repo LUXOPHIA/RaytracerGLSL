@@ -116,10 +116,10 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);                                  // アプリ終了イベントのメソッド
 begin
-     _Comput.DisposeOf;                                                         // コンピュートシェーダの廃棄
-     _Imager.DisposeOf;                                                         // イメージの廃棄
-     _Camera.DisposeOf;                                                         // 行列配列の廃棄
-     _Textur.DisposeOf;                                                         // テクスチャの廃棄
+     _Comput.Free;                                                              // コンピュートシェーダの廃棄
+     _Imager.Free;                                                              // イメージの廃棄
+     _Camera.Free;                                                              // 行列配列の廃棄
+     _Textur.Free;                                                              // テクスチャの廃棄
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
