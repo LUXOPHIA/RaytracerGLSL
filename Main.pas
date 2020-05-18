@@ -113,7 +113,7 @@ begin
      for Y := 0 to _ImageY-1 do
      for X := 0 to _ImageX-1 do D.Cells[ X, Y ] := R.DrawSeed;
 
-     D.DisposeOf;
+     D.Free;
 end;
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -143,10 +143,10 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-     _Comput.DisposeOf;
-     _Imager.DisposeOf;
-     _Camera.DisposeOf;
-     _Textur.DisposeOf;
+     _Comput.Free;
+     _Imager.Free;
+     _Camera.Free;
+     _Textur.Free;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
