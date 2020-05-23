@@ -408,21 +408,15 @@
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D4.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D4.V4.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D5.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.DN.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.M2.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.M3.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.M4.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2x2.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3x3.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D4x4.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D1.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2.M4.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2.V4.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3.M4.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3.V4.pas"/>
-        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D4.M4.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.Forms.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\LUX.GPU.OpenGL.Render_.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\LUX.GPU.OpenGL.Scener.pas"/>
@@ -523,6 +517,11 @@
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\Random\SFMT\LUX.Random.SFMT.P4253.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\Random\SFMT\LUX.Random.SFMT.P11213.pas"/>
         <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\Random\SFMT\LUX.Random.SFMT.P19937.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2x4.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D2x4x4.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3x4.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D3x4x4.pas"/>
+        <DCCReference Include="_LIBRARY\LUXOPHIA\LUX\LUX.D4x4x4.pas"/>
         <None Include="_DATA\Comput.glsl"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -551,15 +550,15 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\RaytracerGLSL.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win64">
-                        <RemoteName>RaytracerGLSL.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="_DATA\Comput.glsl" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win64">
                         <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\RaytracerGLSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>RaytracerGLSL.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
