@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Objects, FMX.TabControl, FMX.ScrollBox, FMX.Memo, LUX.FMX.Controls,
   Winapi.OpenGL, Winapi.OpenGLext,
-  LUX, LUX.D1, LUX.D2, LUX.D3, LUX.D4, LUX.M4,
+  LUX, LUX.D1, LUX.D2, LUX.D3, LUX.D4, LUX.D4x4,
   LUX.Random.Xoshiro.B32,
   LUX.Random.Xoshiro.B32.P128,
   LUX.GPU.OpenGL,
