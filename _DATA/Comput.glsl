@@ -26,6 +26,56 @@ const float Pi  = 3.141592653589793;
 const float Pi2 = Pi * 2.0;
 const float P2i = Pi / 2.0;
 
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
+
+struct TdFloat
+{
+    float o;
+    float d;
+};
+
+TdFloat newTdFloat( float o_, float d_ )
+{
+    TdFloat Result;
+
+    Result.o = o_;
+    Result.d = d_;
+
+    return Result;
+}
+
+TdFloat newTdFloat( float o_ )
+{
+    return newTdFloat( o_, 0 );
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdVec3
+
+struct TdVec3
+{
+    TdFloat x;
+    TdFloat y;
+    TdFloat z;
+};
+
+TdVec3 newTdVec3( float X_, float Y_, float Z_ )
+{
+    TdVec3 Result;
+
+    Result.x = newTdFloat( X_, 0 );
+    Result.y = newTdFloat( Y_, 0 );
+    Result.z = newTdFloat( Z_, 0 );
+
+    return Result;
+}
+
+TdVec3 newTdVec3( vec3 V_ )
+{
+    return newTdVec3( V_.x, V_.y, V_.z );
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
 float Pow2( in float X )
@@ -117,6 +167,402 @@ float Rand()
   return float( Result ) / 4294967296.0;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
+
+///////////////////////////////////////////////////////////////////////// 演算子
+
+TdFloat Add( TdFloat A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o + B_.o;
+    Result.d = A_.d + B_.d;
+
+    return Result;
+}
+
+TdFloat Add( float A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_ + B_.o;
+    Result.d =      B_.d;
+
+    return Result;
+}
+
+TdFloat Add( TdFloat A_, float B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o + B_;
+    Result.d = A_.d     ;
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloat Sub( TdFloat A_, float B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o - B_;
+    Result.d = A_.d     ;
+
+    return Result;
+}
+
+TdFloat Sub( float A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_ - B_.o;
+    Result.d =     -B_.d;
+
+    return Result;
+}
+
+TdFloat Sub( TdFloat A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o - B_.o;
+    Result.d = A_.d - B_.d;
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloat Mul( TdFloat A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o * B_.o;
+    Result.d = A_.d * B_.o + A_.o * B_.d;
+
+    return Result;
+}
+
+TdFloat Mul( float A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_ * B_.o;
+    Result.d = A_ * B_.d;
+
+    return Result;
+}
+
+TdFloat Mul( TdFloat A_, float B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o * B_;
+    Result.d = A_.d * B_;
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloat Div( TdFloat A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o =                 A_.o          /       B_.o  ;
+    Result.d = ( A_.d * B_.o - A_.o * B_.d ) / Pow2( B_.o );
+
+    return Result;
+}
+
+TdFloat Div( float A_, TdFloat B_ )
+{
+    TdFloat Result;
+
+    Result.o =  A_        /       B_.o  ;
+    Result.d = -A_ * B_.d / Pow2( B_.o );
+
+    return Result;
+}
+
+TdFloat Div( TdFloat A_, float B_ )
+{
+    TdFloat Result;
+
+    Result.o = A_.o / B_;
+    Result.d = A_.d / B_;
+
+    return Result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TdFloat Pow2( TdFloat A_ )
+{
+    TdFloat Result;
+
+    Result.o = Pow2( A_.o );
+    Result.d = 2 * A_.o * A_.d;
+
+    return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdVec3
+
+///////////////////////////////////////////////////////////////////////// 演算子
+
+TdVec3 Add( TdVec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Add( A_.x, B_.x );
+    Result.y = Add( A_.y, B_.y );
+    Result.z = Add( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Add( vec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Add( A_.x, B_.x );
+    Result.y = Add( A_.y, B_.y );
+    Result.z = Add( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Add( TdVec3 A_, vec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Add( A_.x, B_.x );
+    Result.y = Add( A_.y, B_.y );
+    Result.z = Add( A_.z, B_.z );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Sub( TdVec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Sub( A_.x, B_.x );
+    Result.y = Sub( A_.y, B_.y );
+    Result.z = Sub( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Sub( vec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Sub( A_.x, B_.x );
+    Result.y = Sub( A_.y, B_.y );
+    Result.z = Sub( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Sub( TdVec3 A_, vec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Sub( A_.x, B_.x );
+    Result.y = Sub( A_.y, B_.y );
+    Result.z = Sub( A_.z, B_.z );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Mul( TdVec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_.x );
+    Result.y = Mul( A_.y, B_.y );
+    Result.z = Mul( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Mul( vec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_.x );
+    Result.y = Mul( A_.y, B_.y );
+    Result.z = Mul( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Mul( TdVec3 A_, vec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_.x );
+    Result.y = Mul( A_.y, B_.y );
+    Result.z = Mul( A_.z, B_.z );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Mul( TdFloat A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_, B_.x );
+    Result.y = Mul( A_, B_.y );
+    Result.z = Mul( A_, B_.z );
+
+    return Result;
+}
+
+TdVec3 Mul( float A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_, B_.x );
+    Result.y = Mul( A_, B_.y );
+    Result.z = Mul( A_, B_.z );
+
+    return Result;
+}
+
+TdVec3 Mul( TdFloat A_, vec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_, B_.x );
+    Result.y = Mul( A_, B_.y );
+    Result.z = Mul( A_, B_.z );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Mul( TdVec3 A_, float B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_ );
+    Result.y = Mul( A_.y, B_ );
+    Result.z = Mul( A_.z, B_ );
+
+    return Result;
+}
+
+TdVec3 Mul( vec3 A_, TdFloat B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_ );
+    Result.y = Mul( A_.y, B_ );
+    Result.z = Mul( A_.z, B_ );
+
+    return Result;
+}
+
+TdVec3 Mul( TdVec3 A_, TdFloat B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Mul( A_.x, B_ );
+    Result.y = Mul( A_.y, B_ );
+    Result.z = Mul( A_.z, B_ );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Div( TdVec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_.x );
+    Result.y = Div( A_.y, B_.y );
+    Result.z = Div( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Div( vec3 A_, TdVec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_.x );
+    Result.y = Div( A_.y, B_.y );
+    Result.z = Div( A_.z, B_.z );
+
+    return Result;
+}
+
+TdVec3 Div( TdVec3 A_, vec3 B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_.x );
+    Result.y = Div( A_.y, B_.y );
+    Result.z = Div( A_.z, B_.z );
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdVec3 Div( TdVec3 A_, TdFloat B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_ );
+    Result.y = Div( A_.y, B_ );
+    Result.z = Div( A_.z, B_ );
+
+    return Result;
+}
+
+TdVec3 Div( vec3 A_, TdFloat B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_ );
+    Result.y = Div( A_.y, B_ );
+    Result.z = Div( A_.z, B_ );
+
+    return Result;
+}
+
+TdVec3 Div( TdVec3 A_, float B_ )
+{
+    TdVec3 Result;
+
+    Result.x = Div( A_.x, B_ );
+    Result.y = Div( A_.y, B_ );
+    Result.z = Div( A_.z, B_ );
+
+    return Result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TdFloat Abs2( TdVec3 A_ )
+{
+    return Add( Add( Pow2( A_.x ), Pow2( A_.y ) ), Pow2( A_.z ) );
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【外部変数】
 
 layout( rgba32ui ) uniform uimage2D _Seeder;
@@ -148,6 +594,24 @@ struct TRay
   vec3 Wei;
   vec3 Emi;
 };
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdRay
+
+struct TdRay
+{
+    TdVec3 Pos;
+    TdVec3 Vec;
+};
+
+TdRay newTdRay( TRay Ray_ )
+{
+    TdRay Result;
+
+    Result.Pos = newTdVec3( Ray_.Pos.xyz );
+    Result.Vec = newTdVec3( Ray_.Vec.xyz );
+
+    return Result;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% THit
 
@@ -298,6 +762,92 @@ TRay MatDiffu( in TRay Ray, in THit Hit )
 
 //##############################################################################
 
+TdFloat MathFunc( TdVec3 P_ )
+{
+    return Sub( Add( Add( Pow2( P_.x ), Pow2( P_.y ) ), Pow2( P_.z ) ), 1 );
+}
+
+vec3 MathGrad( vec3 P_ )
+{
+    vec3 Result;
+
+    TdVec3 P = newTdVec3( P_ );
+
+    P.x.d = 1;  P.y.d = 0;  P.z.d = 0;
+
+    Result.x = MathFunc( P ).d;
+
+    P.x.d = 0;  P.y.d = 1;  P.z.d = 0;
+
+    Result.y = MathFunc( P ).d;
+
+    P.x.d = 0;  P.y.d = 0;  P.z.d = 1;
+
+    Result.z = MathFunc( P ).d;
+
+    return Result;
+}
+
+//------------------------------------------------------------------------------
+
+bool HitFunc( TRay R_, float T0_, float T1_, out float T_, out vec3 P_ )
+{
+    TdFloat T;
+    T.o = T0_;
+    T.d = 1;
+
+    for ( uint N = 1; N <= 64; N++ )
+    {
+        TdVec3 P = Add( Mul( R_.Vec.xyz, T ), R_.Pos.xyz );
+
+        TdFloat F = MathFunc( P );
+
+        if ( abs( F.o ) < 0.001 )
+        {
+            T_ = T.o;
+            P_ = vec3( P.x.o, P.y.o, P.z.o );
+
+            return true;
+        }
+
+        T.o = T.o - F.o / F.d;
+
+        if ( ( T.o < T0_ ) || ( T1_ < T.o ) ) return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------
+
+void ObjImpli( in TRay Ray, inout THit Hit )
+{
+  float Td = 0.01;
+  float T0 = 0;
+  float T1 = Td;
+
+  for ( uint I = 0; I < 400; I++ )
+  {
+    float  T;
+    vec3   P;
+
+    if ( HitFunc( Ray, T0, T1, T, P ) && ( T > 0 ) )
+    {
+      Hit.t   = T;
+      Hit.Pos = vec4(                      P    , 1 );
+      Hit.Nor = vec4( normalize( MathGrad( P ) ), 0 );
+      Hit.Mat = 2;
+
+      break;
+    }
+
+    T0 += Td;
+    T1 += Td;
+  }
+}
+
+//------------------------------------------------------------------------------
+
 void Raytrace( inout TRay Ray )
 {
   THit Hit;
@@ -308,7 +858,7 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjSpher( Ray, Hit );
+    ObjImpli( Ray, Hit );
     ObjPlane( Ray, Hit );
 
     ///// 材質
