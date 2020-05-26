@@ -595,24 +595,6 @@ struct TRay
   vec3 Emi;
 };
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdRay
-
-struct TdRay
-{
-    TdVec3 Pos;
-    TdVec3 Vec;
-};
-
-TdRay newTdRay( TRay Ray_ )
-{
-    TdRay Result;
-
-    Result.Pos = newTdVec3( Ray_.Pos.xyz );
-    Result.Vec = newTdVec3( Ray_.Vec.xyz );
-
-    return Result;
-}
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% THit
 
 struct THit
@@ -796,7 +778,7 @@ bool HitFunc( TRay R_, float T0_, float T1_, out float T_, out vec3 P_ )
     T.o = T0_;
     T.d = 1;
 
-    for ( uint N = 1; N <= 64; N++ )
+    for ( uint N = 1; N <= 16; N++ )
     {
         TdVec3 P = Add( Mul( R_.Vec.xyz, T ), R_.Pos.xyz );
 
@@ -822,11 +804,11 @@ bool HitFunc( TRay R_, float T0_, float T1_, out float T_, out vec3 P_ )
 
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
-  float Td = 0.01;
+  float Td = 0.1;
   float T0 = 0;
-  float T1 = Td;
+  float T1 = 1.1 * Td;
 
-  for ( uint I = 0; I < 400; I++ )
+  for ( uint I = 0; I < 40; I++ )
   {
     float  T;
     vec3   P;
