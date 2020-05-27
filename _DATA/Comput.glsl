@@ -22,9 +22,10 @@
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【定数】
 
-const float Pi  = 3.141592653589793;
-const float Pi2 = Pi * 2.0;
-const float P2i = Pi / 2.0;
+const float Pi        = 3.141592653589793;
+const float Pi2       = Pi * 2;
+const float P2i       = Pi / 2;
+const float FLOAT_MAX = 3.402823e+38;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
 
@@ -732,21 +733,63 @@ vec3 MathGrad( TdVec3 P )
 
 //------------------------------------------------------------------------------
 
+bool Slab( in    float RayP, in    float RayV,
+           in    float MinP, in    float MaxP,
+           inout float MinT, inout float MaxT )
+{
+  float T0, T1;
+
+  if ( RayV < 0 )
+  {
+    T0 = ( MaxP - RayP ) / RayV;
+    T1 = ( MinP - RayP ) / RayV;
+  }
+  else
+  if ( 0 < RayV )
+  {
+    T0 = ( MinP - RayP ) / RayV;
+    T1 = ( MaxP - RayP ) / RayV;
+  }
+  else return false;
+
+  if ( MinT < T0 ) MinT = T0;
+  if ( T1 < MaxT ) MaxT = T1;
+
+  return true;
+}
+
+bool HitAABB( in  TRay  Ray ,
+              in  vec3  MinP, in  vec3  MaxP,
+              out float MinT, out float MaxT )
+{
+  MinT = 0;
+  MaxT = FLOAT_MAX;
+
+  return Slab( Ray.Pos.x, Ray.Vec.x, MinP.x, MaxP.x, MinT, MaxT )
+      && Slab( Ray.Pos.y, Ray.Vec.y, MinP.y, MaxP.y, MinT, MaxT )
+      && Slab( Ray.Pos.z, Ray.Vec.z, MinP.z, MaxP.z, MinT, MaxT )
+      && ( MinT < MaxT );
+}
+
+//------------------------------------------------------------------------------
+
 bool HitFunc( in TRay Ray, in float T2d, inout TdFloat T, out TdVec3 P )
 {
+  const uint LoopN = 16;
+
   float   Tds, Td;
   uint    N;
   TdFloat F;
 
   Tds = 0;
 
-  for ( N = 1; N <= 16; N++ )
+  for ( N = 1; N <= LoopN; N++ )
   {
     P = Add( Mul( Ray.Vec.xyz, T ), Ray.Pos.xyz );
 
     F = MathFunc( P );
 
-    if ( abs( F.o ) < 0.001 ) return true;
+    if ( abs( F.o ) < 0.001 ) return ( 0 < T.o );
 
     Td = -F.o / F.d;
 
@@ -762,30 +805,31 @@ bool HitFunc( in TRay Ray, in float T2d, inout TdFloat T, out TdVec3 P )
 
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
-  float   Td, T2d, T0;
-  uint    I;
+  const vec3  MinP = vec3( -1, -1, -1 );
+  const vec3  MaxP = vec3( +1, +1, +1 );
+  const float Td   = 0.1;
+  const float T2d  = 1.1 * Td/2;
+
+  float   MinT, MaxT, T0;
   TdFloat T;
   TdVec3  P;
 
-  Td = 0.1;  T2d = 1.1 * Td / 2;
-
-  T0 = 0;
-
-  for ( I = 0; I < 40; I++ )
+  if ( HitAABB( Ray, MinP - _EmitShift, MaxP + _EmitShift, MinT, MaxT ) )
   {
-    T = TdFloat( T0, 1 );
-
-    if ( HitFunc( Ray, T2d, T, P ) && ( T.o > 0 ) )
+    for ( T0 = MinT; T0 < MaxT + Td; T0 += Td )
     {
-      Hit.t   = T.o;
-      Hit.Pos = vec4( P.x.o, P.y.o, P.z.o, 1 );
-      Hit.Nor = vec4( normalize( MathGrad( P ) ), 0 );
-      Hit.Mat = 2;
+      T = TdFloat( T0, 1 );
 
-      break;
+      if ( HitFunc( Ray, T2d, T, P ) && ( T.o < MaxT ) )
+      {
+        Hit.t   = T.o;
+        Hit.Pos = vec4( P.x.o, P.y.o, P.z.o, 1 );
+        Hit.Nor = vec4( normalize( MathGrad( P ) ), 0 );
+        Hit.Mat = 2;
+
+        break;
+      }
     }
-
-    T0 += Td;
   }
 }
 
@@ -798,7 +842,7 @@ void Raytrace( inout TRay Ray )
 
   for ( L = 1; L <= 5; L++ )
   {
-    Hit = THit( 10000, 0, vec4( 0 ), vec4( 0 ) );
+    Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
 
     ///// 物体
 
