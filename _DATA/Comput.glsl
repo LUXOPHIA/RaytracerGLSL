@@ -46,6 +46,28 @@ float length2( in vec3 V )
 
 //------------------------------------------------------------------------------
 
+int MinI( in float A, in float B, in float C )
+{
+  if ( A <= B ) {
+    if ( A <= C ) return 0; else return 2;
+  } else {
+    if ( B <= C ) return 1; else return 2;
+  }
+}
+
+//------------------------------------------------------------------------------
+
+int MaxI( in float A, in float B, in float C )
+{
+  if ( A >= B ) {
+    if ( A >= C ) return 0; else return 2;
+  } else {
+    if ( B >= C ) return 1; else return 2;
+  }
+}
+
+//------------------------------------------------------------------------------
+
 vec2 VecToSky( in vec3 Vec )
 {
   vec2 Result;
@@ -212,29 +234,28 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 
 //------------------------------------------------------------------------------
 
-bool HitSlab( in    float RayP, in    float RayV,
-           in    float MinP, in    float MaxP,
-           inout float MinT, inout float MaxT,
-           inout int   IncF, inout int   OutF, in int Axis )
+bool HitSlab( in  float RayP, in  float RayV,
+              in  float MinP, in  float MaxP,
+              out float MinT, out float MaxT )
 {
-  float T0, T1;
-  int   F0, F1;
-
   if ( RayV < -FLOAT_EPS2 )
   {
-    T0 = ( MaxP - RayP ) / RayV;  F0 = +Axis;
-    T1 = ( MinP - RayP ) / RayV;  F1 = -Axis;
+    MinT = ( MaxP - RayP ) / RayV;
+    MaxT = ( MinP - RayP ) / RayV;
   }
   else
   if ( +FLOAT_EPS2 < RayV )
   {
-    T0 = ( MinP - RayP ) / RayV;  F0 = -Axis;
-    T1 = ( MaxP - RayP ) / RayV;  F1 = +Axis;
+    MinT = ( MinP - RayP ) / RayV;
+    MaxT = ( MaxP - RayP ) / RayV;
   }
-  else return ( MinP < RayP ) && ( RayP < MaxP );
-
-  if ( MinT < T0 ) { MinT = T0;  IncF = F0; }
-  if ( T1 < MaxT ) { MaxT = T1;  OutF = F1; }
+  else
+  if ( ( MinP < RayP ) && ( RayP < MaxP ) )
+  {
+    MinT = -FLOAT_MAX;
+    MaxT = +FLOAT_MAX;
+  }
+  else return false;
 
   return true;
 }
@@ -242,37 +263,36 @@ bool HitSlab( in    float RayP, in    float RayV,
 bool HitAABB( in  vec4  RayP, in  vec4  RayV,
               in  vec3  MinP, in  vec3  MaxP,
               out float MinT, out float MaxT,
-              out int   IncF, out int   OutF )
+              out int   IncA, out int   OutA )
 {
-  MinT = -FLOAT_MAX;  IncF = 0;
-  MaxT = +FLOAT_MAX;  OutF = 0;
+  vec3 T0, T1;
 
-  return HitSlab( RayP.x, RayV.x, MinP.x, MaxP.x, MinT, MaxT, IncF, OutF, 1 )
-      && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, MinT, MaxT, IncF, OutF, 2 )
-      && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, MinT, MaxT, IncF, OutF, 3 )
-      && ( MinT < MaxT );
+  if ( HitSlab( RayP.x, RayV.x, MinP.x, MaxP.x, T0.x, T1.x )
+    && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, T0.y, T1.y )
+    && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, T0.z, T1.z ) )
+  {
+    IncA = MaxI( T0.x, T0.y, T0.z );  MinT = T0[ IncA ];
+    OutA = MinI( T1.x, T1.y, T1.z );  MaxT = T1[ OutA ];
+
+    return ( MinT < MaxT );
+  }
+
+  return false;
 }
 
 void ObjRecta( in TRay Ray, inout THit Hit, in vec3 MinP, in vec3 MaxP )
 {
   float MinT, MaxT;
-  int   IncF, OutF;
+  int   IncA, OutA;
 
-  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncF, OutF )
+  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncA, OutA )
     && ( 0 < MinT ) && ( MinT < Hit.t ) )
   {
     Hit.t   = MinT;
     Hit.Pos = Ray.Pos + MinT * Ray.Vec;
 
-    switch( IncF )
-    {
-      case -3: Hit.Nor = vec4(  0,  0, -1, 0 ); break;
-      case -2: Hit.Nor = vec4(  0, -1,  0, 0 ); break;
-      case -1: Hit.Nor = vec4( -1,  0,  0, 0 ); break;
-      case +1: Hit.Nor = vec4( +1,  0,  0, 0 ); break;
-      case +2: Hit.Nor = vec4(  0, +1,  0, 0 ); break;
-      case +3: Hit.Nor = vec4(  0,  0, +1, 0 ); break;
-    }
+    Hit.Nor = vec4( 0 );
+    Hit.Nor[ IncA ] = sign( Ray.Vec[ IncA ] );
 
     Hit.Mat = 1;
   }
