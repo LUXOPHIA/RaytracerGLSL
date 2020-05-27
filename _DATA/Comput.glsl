@@ -22,10 +22,13 @@
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【定数】
 
-const float Pi        = 3.141592653589793;
-const float Pi2       = Pi * 2.0;
-const float P2i       = Pi / 2.0;
-const float FLOAT_MAX = 3.402823e+38;
+const float Pi         = 3.141592653589793;
+const float Pi2        = Pi * 2.0;
+const float P2i        = Pi / 2.0;
+const float FLOAT_MAX  = 3.402823e+38;
+const float FLOAT_EPS  = 1.1920928955078125E-7;
+const float FLOAT_EPS1 = FLOAT_EPS * 1E1;
+const float FLOAT_EPS2 = FLOAT_EPS * 1E2;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
@@ -209,62 +212,73 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 
 //------------------------------------------------------------------------------
 
-bool Slab( in float Pos, in float Vec,
-           in float Cen, in float Siz,
-           inout float MinT, inout float MaxT )
+bool HitSlab( in    float RayP, in    float RayV,
+           in    float MinP, in    float MaxP,
+           inout float MinT, inout float MaxT,
+           inout int   IncF, inout int   OutF, in int Axis )
 {
-  float S, T0, T1;
+  float T0, T1;
+  int   F0, F1;
 
-  S = sign( Vec );
+  if ( RayV < -FLOAT_EPS2 )
+  {
+    T0 = ( MaxP - RayP ) / RayV;  F0 = +Axis;
+    T1 = ( MinP - RayP ) / RayV;  F1 = -Axis;
+  }
+  else
+  if ( +FLOAT_EPS2 < RayV )
+  {
+    T0 = ( MinP - RayP ) / RayV;  F0 = -Axis;
+    T1 = ( MaxP - RayP ) / RayV;  F1 = +Axis;
+  }
+  else return ( MinP < RayP ) && ( RayP < MaxP );
 
-  T0 = ( Cen - S * Siz/2 - Pos ) / Vec;
-  T1 = ( Cen + S * Siz/2 - Pos ) / Vec;
+  if ( MinT < T0 ) { MinT = T0;  IncF = F0; }
+  if ( T1 < MaxT ) { MaxT = T1;  OutF = F1; }
 
-  if ( T1 < MaxT ) { MaxT = T1; }
-
-  if ( MinT < T0 ) { MinT = T0; return true; } else { return false; }
+  return true;
 }
 
-void ObjRecta( in TRay Ray, inout THit Hit, in vec3 Cen, in vec3 Siz )
+bool HitAABB( in  vec4  RayP, in  vec4  RayV,
+              in  vec3  MinP, in  vec3  MaxP,
+              out float MinT, out float MaxT,
+              out int   IncF, out int   OutF )
+{
+  MinT = -FLOAT_MAX;  IncF = 0;
+  MaxT = +FLOAT_MAX;  OutF = 0;
+
+  return HitSlab( RayP.x, RayV.x, MinP.x, MaxP.x, MinT, MaxT, IncF, OutF, 1 )
+      && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, MinT, MaxT, IncF, OutF, 2 )
+      && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, MinT, MaxT, IncF, OutF, 3 )
+      && ( MinT < MaxT );
+}
+
+void ObjRecta( in TRay Ray, inout THit Hit, in vec3 MinP, in vec3 MaxP )
 {
   float MinT, MaxT;
-  vec3 Nor;
+  int   IncF, OutF;
 
-  MinT = -FLOAT_MAX;
-  MaxT = +FLOAT_MAX;
-
-  if ( Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT ) ) Nor = vec3( -sign( Ray.Vec.x ), 0, 0 );
-  if ( Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT ) ) Nor = vec3( 0, -sign( Ray.Vec.y ), 0 );
-  if ( Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT ) ) Nor = vec3( 0, 0, -sign( Ray.Vec.z ) );
-
-  if( ( MinT < MaxT ) && ( 0 < MinT ) && ( MinT < Hit.t ) )
+  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncF, OutF )
+    && ( 0 < MinT ) && ( MinT < Hit.t ) )
   {
     Hit.t   = MinT;
     Hit.Pos = Ray.Pos + MinT * Ray.Vec;
-    Hit.Nor = vec4( Nor, 0 );
+
+    switch( IncF )
+    {
+      case -3: Hit.Nor = vec4(  0,  0, -1, 0 ); break;
+      case -2: Hit.Nor = vec4(  0, -1,  0, 0 ); break;
+      case -1: Hit.Nor = vec4( -1,  0,  0, 0 ); break;
+      case +1: Hit.Nor = vec4( +1,  0,  0, 0 ); break;
+      case +2: Hit.Nor = vec4(  0, +1,  0, 0 ); break;
+      case +3: Hit.Nor = vec4(  0,  0, +1, 0 ); break;
+    }
+
     Hit.Mat = 1;
   }
 }
 
-bool HitRecta( in TRay Ray, out float HitT, in vec3 Cen, in vec3 Siz )
-{
-  float MinT, MaxT;
-
-  MinT = -FLOAT_MAX;
-  MaxT = +FLOAT_MAX;
-
-  Slab( Ray.Pos.x, Ray.Vec.x, Cen.x, Siz.x, MinT, MaxT );
-  Slab( Ray.Pos.y, Ray.Vec.y, Cen.y, Siz.y, MinT, MaxT );
-  Slab( Ray.Pos.z, Ray.Vec.z, Cen.z, Siz.z, MinT, MaxT );
-
-  if( MinT < MaxT ) { HitT = MinT; return true; } else return false;
-}
-
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
-
-float _EmitShift = 0.0001;
-
-////////////////////////////////////////////////////////////////////////////////
 
 TRay MatSkyer( in TRay Ray, in THit Hit )
 {
@@ -285,7 +299,7 @@ TRay MatMirro( in TRay Ray, in THit Hit )
   TRay Result;
 
   Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
-  Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Result.Wei = Ray.Wei;
   Result.Emi = Ray.Emi;
 
@@ -316,12 +330,12 @@ TRay MatWater( inout TRay Ray, in THit Hit )
   if ( Rand() < F )
   {
     Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
-    Result.Pos = Hit.Pos + _EmitShift * Nor;
+    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
     Result.Wei = Ray.Wei;
     Result.Emi = Ray.Emi;
   } else {
     Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
-    Result.Pos = Hit.Pos - _EmitShift * Nor;
+    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
     Result.Wei = Ray.Wei;
     Result.Emi = Ray.Emi;
   }
@@ -343,7 +357,7 @@ TRay MatDiffu( in TRay Ray, in THit Hit )
   Result.Vec.x = d * cos( Pi2 * v );
   Result.Vec.z = d * sin( Pi2 * v );
 
-  Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Result.Wei = Ray.Wei;
   Result.Emi = Ray.Emi;
 
@@ -354,18 +368,19 @@ TRay MatDiffu( in TRay Ray, in THit Hit )
 
 void Raytrace( inout TRay Ray )
 {
+  int  L;
   THit Hit;
 
-  for ( int L = 1; L <= 5; L++ )
+  for ( L = 1; L <= 5; L++ )
   {
     Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
 
-    ///// 物体
+    ///// OBJECT
 
-    ObjRecta( Ray, Hit, vec3( 0 ), vec3( 2 ) );
+    ObjRecta( Ray, Hit, vec3( -1, -1, -1 ), vec3( +1, +1, +1 ) );
     ObjPlane( Ray, Hit );
 
-    ///// 材質
+    ///// MATERIAL
 
     switch( Hit.Mat )
     {
@@ -381,6 +396,7 @@ void Raytrace( inout TRay Ray )
 
 void main()
 {
+  uint N;
   vec4 E, S;
   TRay R;
   vec3 A, C, P;
@@ -390,7 +406,7 @@ void main()
   if ( _AccumN == 0 ) A = vec3( 0 );
                  else A = imageLoad( _Accumr, _WorkID.xy ).rgb;
 
-  for( uint N = _AccumN+1; N <= _AccumN+16; N++ )
+  for( N = _AccumN+1; N <= _AccumN+16; N++ )
   {
     E = vec4( 0, 0, 0, 1 );
 
