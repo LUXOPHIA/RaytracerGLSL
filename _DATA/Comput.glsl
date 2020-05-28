@@ -841,22 +841,23 @@ bool HitFunc( in TRay Ray, in float T2d, inout TdFloat T, out TdVec3 P )
 
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
-  const vec3  MinP = vec3( -1, -1, -1 );
-  const vec3  MaxP = vec3( +1, +1, +1 );
+  const vec3  MinP = vec3( -1, -1, -1 ) - FLOAT_EPS2;
+  const vec3  MaxP = vec3( +1, +1, +1 ) + FLOAT_EPS2;
   const float Td   = 0.1;
-  const float T2d  = 1.1 * Td/2;
+  const float T2d  = 1.5 * Td/2;
 
   float   MinT, MaxT, T0;
+  int     IncA, OutA;
   TdFloat T;
   TdVec3  P;
 
-  if ( HitAABB( Ray, MinP - FLOAT_EPS2, MaxP + FLOAT_EPS2, MinT, MaxT ) )
+  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncA, OutA ) )
   {
-    for ( T0 = MinT; T0 < MaxT + Td; T0 += Td )
+    for ( T0 = max( 0, MinT ); T0 < MaxT + Td; T0 += Td )
     {
       T = TdFloat( T0, 1 );
 
-      if ( HitFunc( Ray, T2d, T, P ) && ( T.o < MaxT ) )
+      if ( HitFunc( Ray, T2d, T, P ) && ( 0 < T.o ) && ( T.o < MaxT ) && ( T.o < Hit.t ) )
       {
         Hit.t   = T.o;
         Hit.Pos = vec4( P.x.o, P.y.o, P.z.o, 1 );
