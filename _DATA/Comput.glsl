@@ -22,10 +22,13 @@
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【定数】
 
-const float Pi        = 3.141592653589793;
-const float Pi2       = Pi * 2;
-const float P2i       = Pi / 2;
-const float FLOAT_MAX = 3.402823e+38;
+const float Pi         = 3.141592653589793;
+const float Pi2        = Pi * 2;
+const float P2i        = Pi / 2;
+const float FLOAT_MAX  = 3.402823e+38;
+const float FLOAT_EPS  = 1.1920928955078125E-7;
+const float FLOAT_EPS1 = FLOAT_EPS * 1E1;
+const float FLOAT_EPS2 = FLOAT_EPS * 1E2;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
 
