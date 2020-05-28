@@ -130,6 +130,22 @@ float RandBS4()
   return RandBS2() + RandBS2();
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RandCirc
+
+vec2 RandCirc()
+{
+  vec2 Result;
+  float T, R;
+
+  T = Pi2 * Rand();
+  R = sqrt( Rand() );
+
+  Result.x = R * cos( T );
+  Result.y = R * sin( T );
+
+  return Result;
+}
+
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（演算子）
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
@@ -1000,7 +1016,7 @@ void main()
 
   for( N = _AccumN+1; N <= _AccumN+16; N++ )
   {
-    E = vec4( 0, 0, 0, 1 );
+    E = vec4( 0.02 * RandCirc(), 0, 1 );
 
     S.x =       4.0 * ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 2.0;
     S.y = 1.5 - 3.0 * ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y      ;
