@@ -818,36 +818,49 @@ TdFloat MathFunc( TdVec3 P )
   return Sub( Add( Add( Pow2( P.x ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
 }
 
-vec3 MathGrad( TdVec3 P )
+vec3 MathGrad( vec3 Pos )
 {
-  vec3 Result;
+  vec3   Result;
+  TdVec3 P;
 
-  P.x.d = 1;  P.y.d = 0;  P.z.d = 0;
+  P.x.o = Pos.x;
+  P.y.o = Pos.y;
+  P.z.o = Pos.z;
+
+  P.x.d = 1;
+  P.y.d = 0;
+  P.z.d = 0;
 
   Result.x = MathFunc( P ).d;
 
-  P.x.d = 0;  P.y.d = 1;  P.z.d = 0;
+  P.x.d = 0;
+  P.y.d = 1;
+  P.z.d = 0;
 
   Result.y = MathFunc( P ).d;
 
-  P.x.d = 0;  P.y.d = 0;  P.z.d = 1;
+  P.x.d = 0;
+  P.y.d = 0;
+  P.z.d = 1;
 
   Result.z = MathFunc( P ).d;
 
   return Result;
 }
 
-//------------------------------------------------------------------------------
-
-bool HitFunc( in TRay Ray, in float T2d, inout TdFloat T, out TdVec3 P )
+bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 {
   const uint LoopN = 16;
 
   float   Tds, Td;
   uint    N;
+  TdFloat T;
+  TdVec3  P;
   TdFloat F;
 
   Tds = 0;
+
+  T = TdFloat( HitT, 1 );
 
   for ( N = 1; N <= LoopN; N++ )
   {
@@ -855,7 +868,16 @@ bool HitFunc( in TRay Ray, in float T2d, inout TdFloat T, out TdVec3 P )
 
     F = MathFunc( P );
 
-    if ( abs( F.o ) < 0.001 ) return ( 0 < T.o );
+    if ( abs( F.o ) < 0.001 )
+    {
+      HitT   = T.o;
+
+      HitP.x = P.x.o;
+      HitP.y = P.y.o;
+      HitP.z = P.z.o;
+
+      return true;
+    }
 
     Td = -F.o / F.d;
 
@@ -876,21 +898,21 @@ void ObjImpli( in TRay Ray, inout THit Hit )
   const float Td   = 0.1;
   const float T2d  = 1.5 * Td/2;
 
-  float   MinT, MaxT, T0;
-  int     IncA, OutA;
-  TdFloat T;
-  TdVec3  P;
+  float MinT, MaxT, T0;
+  int   IncA, OutA;
+  float T;
+  vec3  P;
 
   if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncA, OutA ) )
   {
     for ( T0 = max( 0, MinT ); T0 < MaxT + Td; T0 += Td )
     {
-      T = TdFloat( T0, 1 );
+      T = T0;
 
-      if ( HitFunc( Ray, T2d, T, P ) && ( 0 < T.o ) && ( T.o < MaxT ) && ( T.o < Hit.t ) )
+      if ( HitFunc( Ray, T2d, T, P ) && ( 0 < T ) && ( T < MaxT ) && ( T < Hit.t ) )
       {
-        Hit.t   = T.o;
-        Hit.Pos = vec4( P.x.o, P.y.o, P.z.o, 1 );
+        Hit.t   = T;
+        Hit.Pos = vec4( P, 1 );
         Hit.Nor = vec4( normalize( MathGrad( P ) ), 0 );
         Hit.Mat = 2;
 
