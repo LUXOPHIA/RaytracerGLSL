@@ -65,6 +65,28 @@ float length2( in vec3 V )
 
 //------------------------------------------------------------------------------
 
+int MinI( in float A, in float B, in float C )
+{
+  if ( A <= B ) {
+    if ( A <= C ) return 0; else return 2;
+  } else {
+    if ( B <= C ) return 1; else return 2;
+  }
+}
+
+//------------------------------------------------------------------------------
+
+int MaxI( in float A, in float B, in float C )
+{
+  if ( A >= B ) {
+    if ( A >= C ) return 0; else return 2;
+  } else {
+    if ( B >= C ) return 1; else return 2;
+  }
+}
+
+//------------------------------------------------------------------------------
+
 vec2 VecToSky( in vec3 Vec )
 {
   vec2 Result;
