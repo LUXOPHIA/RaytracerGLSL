@@ -751,7 +751,7 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 TdFloat MathFunc( TdVec3 P )
 {
-  return Sub( Add( Add( Pow2( P.x ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
+  return Sub( Add( Add( Mul( Pow2( P.x ), 4 ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
 }
 
 //------------------------------------------------------------------------------
