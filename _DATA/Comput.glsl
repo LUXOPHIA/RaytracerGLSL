@@ -876,7 +876,7 @@ void Raytrace( inout TRay Ray )
   int  L;
   THit Hit;
 
-  for ( L = 1; L <= 5; L++ )
+  for ( L = 1; L <= 8; L++ )
   {
     Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
 
