@@ -556,6 +556,54 @@ TdVec3 Div( TdVec3 A_, float B_ )
   return Result;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 幾何学
+
+bool HitSlab( in  float RayP, in  float RayV,
+              in  float MinP, in  float MaxP,
+              out float MinT, out float MaxT )
+{
+  if ( RayV < -FLOAT_EPS2 )
+  {
+    MinT = ( MaxP - RayP ) / RayV;
+    MaxT = ( MinP - RayP ) / RayV;
+  }
+  else
+  if ( +FLOAT_EPS2 < RayV )
+  {
+    MinT = ( MinP - RayP ) / RayV;
+    MaxT = ( MaxP - RayP ) / RayV;
+  }
+  else
+  if ( ( MinP < RayP ) && ( RayP < MaxP ) )
+  {
+    MinT = -FLOAT_MAX;
+    MaxT = +FLOAT_MAX;
+  }
+  else return false;
+
+  return true;
+}
+
+bool HitAABB( in  vec4  RayP, in  vec4  RayV,
+              in  vec3  MinP, in  vec3  MaxP,
+              out float MinT, out float MaxT,
+              out int   IncA, out int   OutA )
+{
+  vec3 T0, T1;
+
+  if ( HitSlab( RayP.x, RayV.x, MinP.x, MaxP.x, T0.x, T1.x )
+    && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, T0.y, T1.y )
+    && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, T0.z, T1.z ) )
+  {
+    IncA = MaxI( T0.x, T0.y, T0.z );  MinT = T0[ IncA ];
+    OutA = MinI( T1.x, T1.y, T1.z );  MaxT = T1[ OutA ];
+
+    return ( MinT < MaxT );
+  }
+
+  return false;
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【外部変数】
 
 layout( rgba32ui ) uniform uimage2D _Seeder;
@@ -757,46 +805,6 @@ vec3 MathGrad( TdVec3 P )
   Result.z = MathFunc( P ).d;
 
   return Result;
-}
-
-//------------------------------------------------------------------------------
-
-bool Slab( in    float RayP, in    float RayV,
-           in    float MinP, in    float MaxP,
-           inout float MinT, inout float MaxT )
-{
-  float T0, T1;
-
-  if ( RayV < 0 )
-  {
-    T0 = ( MaxP - RayP ) / RayV;
-    T1 = ( MinP - RayP ) / RayV;
-  }
-  else
-  if ( 0 < RayV )
-  {
-    T0 = ( MinP - RayP ) / RayV;
-    T1 = ( MaxP - RayP ) / RayV;
-  }
-  else return false;
-
-  if ( MinT < T0 ) MinT = T0;
-  if ( T1 < MaxT ) MaxT = T1;
-
-  return true;
-}
-
-bool HitAABB( in  TRay  Ray ,
-              in  vec3  MinP, in  vec3  MaxP,
-              out float MinT, out float MaxT )
-{
-  MinT = 0;
-  MaxT = FLOAT_MAX;
-
-  return Slab( Ray.Pos.x, Ray.Vec.x, MinP.x, MaxP.x, MinT, MaxT )
-      && Slab( Ray.Pos.y, Ray.Vec.y, MinP.y, MaxP.y, MinT, MaxT )
-      && Slab( Ray.Pos.z, Ray.Vec.z, MinP.z, MaxP.z, MinT, MaxT )
-      && ( MinT < MaxT );
 }
 
 //------------------------------------------------------------------------------
