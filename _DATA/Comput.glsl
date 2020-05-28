@@ -675,13 +675,15 @@ TRay MatMirro( in TRay Ray, in THit Hit )
 
 //------------------------------------------------------------------------------
 
-TRay MatWater( inout TRay Ray, in THit Hit )
+TRay MatWater( in TRay Ray, in THit Hit )
 {
-  TRay Result;
-  float IOR, F;
+  TRay  Result;
+  float C, IOR, F;
   vec4  Nor;
 
-  if( dot( Ray.Vec.xyz, Hit.Nor.xyz ) < 0 )
+  C = dot( Hit.Nor.xyz, -Ray.Vec.xyz );
+
+  if( 0 < C )
   {
     IOR = 1.333 / 1.000;
     Nor = +Hit.Nor;
