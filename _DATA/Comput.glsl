@@ -620,10 +620,6 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
 
-float _EmitShift = 0.0001;
-
-////////////////////////////////////////////////////////////////////////////////
-
 TRay MatSkyer( in TRay Ray, in THit Hit )
 {
   TRay Result;
@@ -643,7 +639,7 @@ TRay MatMirro( in TRay Ray, in THit Hit )
   TRay Result;
 
   Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
-  Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Result.Wei = Ray.Wei;
   Result.Emi = Ray.Emi;
 
@@ -674,12 +670,12 @@ TRay MatWater( inout TRay Ray, in THit Hit )
   if ( Rand() < F )
   {
     Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
-    Result.Pos = Hit.Pos + _EmitShift * Nor;
+    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
     Result.Wei = Ray.Wei;
     Result.Emi = Ray.Emi;
   } else {
     Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
-    Result.Pos = Hit.Pos - _EmitShift * Nor;
+    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
     Result.Wei = Ray.Wei;
     Result.Emi = Ray.Emi;
   }
@@ -701,7 +697,7 @@ TRay MatDiffu( in TRay Ray, in THit Hit )
   Result.Vec.x = d * cos( Pi2 * v );
   Result.Vec.z = d * sin( Pi2 * v );
 
-  Result.Pos = Hit.Pos + _EmitShift * Hit.Nor;
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Result.Wei = Ray.Wei;
   Result.Emi = Ray.Emi;
 
@@ -817,7 +813,7 @@ void ObjImpli( in TRay Ray, inout THit Hit )
   TdFloat T;
   TdVec3  P;
 
-  if ( HitAABB( Ray, MinP - _EmitShift, MaxP + _EmitShift, MinT, MaxT ) )
+  if ( HitAABB( Ray, MinP - FLOAT_EPS2, MaxP + FLOAT_EPS2, MinT, MaxT ) )
   {
     for ( T0 = MinT; T0 < MaxT + Td; T0 += Td )
     {
