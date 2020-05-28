@@ -164,7 +164,7 @@ float Rand()
 
   _RandSeed[ 3 ] = rotl( _RandSeed[ 3 ], 11 );
 
-  return float( Result ) / 4294967296.0;
+  return uintBitsToFloat( Result & 0x007FFFFFu | 0x3F800000u ) - 1;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
