@@ -693,6 +693,36 @@ void ObjSpher( in TRay Ray, inout THit Hit )
   }
 }
 
+//------------------------------------------------------------------------------
+
+void ObjRecta( in TRay Ray, inout THit Hit )
+{
+  const vec3 MinP = vec3( -1, -1, -1 );
+  const vec3 MaxP = vec3( +1, +1, +1 );
+
+  float MinT, MaxT, T;
+  int   IncA, OutA;
+
+  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, MinT, MaxT, IncA, OutA ) )
+  {
+    if ( FLOAT_EPS2 < MinT ) T = MinT;
+    else
+    if ( FLOAT_EPS2 < MaxT ) T = MaxT;
+    else return;
+
+    if ( MaxT < Hit.t )
+    {
+      Hit.t   = T;
+      Hit.Pos = Ray.Pos + Hit.t * Ray.Vec;
+
+      Hit.Nor = vec4( 0 );
+      Hit.Nor[ IncA ] = -sign( Ray.Vec[ IncA ] );
+
+      Hit.Mat = 2;
+    }
+  }
+}
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
 
 TRay MatSkyer( in TRay Ray, in THit Hit )
@@ -883,8 +913,10 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjImpli( Ray, Hit );
     ObjPlane( Ray, Hit );
+    //ObjSpher( Ray, Hit );
+    //ObjRecta( Ray, Hit );
+    ObjImpli( Ray, Hit );
 
     ///// 材質
 
