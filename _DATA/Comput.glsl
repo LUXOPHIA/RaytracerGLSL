@@ -124,17 +124,17 @@ vec3 GammaCorrect( in vec3 Color, in float Gamma )
 float Fresnel( in vec3 Vec, in vec3 Nor, in float IOR )
 {
   float N2, C, G2, F0;
+  // float N2C, G;
 
   N2 = Pow2( IOR );
   C  = dot( Nor, -Vec );
   G2 = N2 + Pow2( C ) - 1;
   if ( G2 < 0 ) return 1;
 
-  //float N2C, G;
-  //N2C = N2 * C;
-  //G   = sqrt( G2 );
-  //return ( Pow2( (   C - G ) / (   C + G ) )
-  //       + Pow2( ( N2C - G ) / ( N2C + G ) ) ) / 2;
+  // N2C = N2 * C;
+  // G   = sqrt( G2 );
+  // return ( Pow2( (   C - G ) / (   C + G ) )
+  //        + Pow2( ( N2C - G ) / ( N2C + G ) ) ) / 2;
 
   F0 = Pow2( ( IOR - 1 ) / ( IOR + 1 ) );
   return F0 + ( 1 - F0 ) * pow( 1 - C, 5 );
