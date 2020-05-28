@@ -150,6 +150,9 @@ begin
      _Imager.Grid.CellsY := _ImageY;
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
+
+     _MouseA.X := 45;
+     _MouseA.Y := 10;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
