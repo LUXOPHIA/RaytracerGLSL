@@ -51,19 +51,23 @@ struct TdVec3
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（一般）
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Pow2
+
 float Pow2( in float X )
 {
   return X * X;
 }
 
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% length2
 
 float length2( in vec3 V )
 {
   return Pow2( V.x ) + Pow2( V.y ) + Pow2( V.z );
 }
 
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MinI
 
 int MinI( in float A, in float B, in float C )
 {
@@ -74,7 +78,7 @@ int MinI( in float A, in float B, in float C )
   }
 }
 
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MaxI
 
 int MaxI( in float A, in float B, in float C )
 {
@@ -85,62 +89,7 @@ int MaxI( in float A, in float B, in float C )
   }
 }
 
-//------------------------------------------------------------------------------
-
-vec2 VecToSky( in vec3 Vec )
-{
-  vec2 Result;
-
-  Result.x = ( Pi - atan( -Vec.x, -Vec.z ) ) / Pi2;
-  Result.y =        acos(  Vec.y           ) / Pi ;
-
-  return Result;
-}
-
-//------------------------------------------------------------------------------
-
-vec3 ToneMap( in vec3 Color, in float White )
-{
-  return clamp( Color * ( 1 + Color / White ) / ( 1 + Color ), 0, 1 );
-}
-
-//------------------------------------------------------------------------------
-
-vec3 GammaCorrect( in vec3 Color, in float Gamma )
-{
-  vec3 Result;
-
-  float G = 1 / Gamma;
-
-  Result.r = pow( Color.r, G );
-  Result.g = pow( Color.g, G );
-  Result.b = pow( Color.b, G );
-
-  return Result;
-}
-
-//------------------------------------------------------------------------------
-
-float Fresnel( in vec3 Vec, in vec3 Nor, in float IOR )
-{
-  float N2, C, G2, F0;
-  // float N2C, G;
-
-  N2 = Pow2( IOR );
-  C  = dot( Nor, -Vec );
-  G2 = N2 + Pow2( C ) - 1;
-  if ( G2 < 0 ) return 1;
-
-  // N2C = N2 * C;
-  // G   = sqrt( G2 );
-  // return ( Pow2( (   C - G ) / (   C + G ) )
-  //        + Pow2( ( N2C - G ) / ( N2C + G ) ) ) / 2;
-
-  F0 = Pow2( ( IOR - 1 ) / ( IOR + 1 ) );
-  return F0 + ( 1 - F0 ) * pow( 1 - C, 5 );
-}
-
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Rand
 
 uvec4 _RandSeed;
 
@@ -167,9 +116,9 @@ float Rand()
   return uintBitsToFloat( Result & 0x007FFFFFu | 0x3F800000u ) - 1;
 }
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（演算子）
 
-///////////////////////////////////////////////////////////////////////// 演算子
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
 
 TdFloat Add( TdFloat A_, TdFloat B_ )
 {
@@ -310,8 +259,6 @@ TdFloat Pow2( TdFloat A_ )
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdVec3
-
-///////////////////////////////////////////////////////////////////////// 演算子
 
 TdVec3 Add( TdVec3 A_, TdVec3 B_ )
 {
@@ -556,7 +503,21 @@ TdVec3 Div( TdVec3 A_, float B_ )
   return Result;
 }
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 幾何学
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（幾何学）
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% VecToSky
+
+vec2 VecToSky( in vec3 Vec )
+{
+  vec2 Result;
+
+  Result.x = ( Pi - atan( -Vec.x, -Vec.z ) ) / Pi2;
+  Result.y =        acos(  Vec.y           ) / Pi ;
+
+  return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% HitAABB
 
 bool HitSlab( in  float RayP, in  float RayV,
               in  float MinP, in  float MaxP,
@@ -584,6 +545,8 @@ bool HitSlab( in  float RayP, in  float RayV,
   return true;
 }
 
+//------------------------------------------------------------------------------
+
 bool HitAABB( in  vec4  RayP, in  vec4  RayV,
               in  vec3  MinP, in  vec3  MaxP,
               out float MinT, out float MaxT,
@@ -604,7 +567,52 @@ bool HitAABB( in  vec4  RayP, in  vec4  RayV,
   return false;
 }
 
-//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【外部変数】
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（光学）
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ToneMap
+
+vec3 ToneMap( in vec3 Color, in float White )
+{
+  return clamp( Color * ( 1 + Color / White ) / ( 1 + Color ), 0, 1 );
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% GammaCorrect
+
+vec3 GammaCorrect( in vec3 Color, in float Gamma )
+{
+  vec3 Result;
+
+  float G = 1 / Gamma;
+
+  Result.r = pow( Color.r, G );
+  Result.g = pow( Color.g, G );
+  Result.b = pow( Color.b, G );
+
+  return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fresnel
+
+float Fresnel( in vec3 Vec, in vec3 Nor, in float IOR )
+{
+  float N2, C, G2, F0;
+  // float N2C, G;
+
+  N2 = Pow2( IOR );
+  C  = dot( Nor, -Vec );
+  G2 = N2 + Pow2( C ) - 1;
+  if ( G2 < 0 ) return 1;
+
+  // N2C = N2 * C;
+  // G   = sqrt( G2 );
+  // return ( Pow2( (   C - G ) / (   C + G ) )
+  //        + Pow2( ( N2C - G ) / ( N2C + G ) ) ) / 2;
+
+  F0 = Pow2( ( IOR - 1 ) / ( IOR + 1 ) );
+  return F0 + ( 1 - F0 ) * pow( 1 - C, 5 );
+}
+
+//############################################################################## ■
 
 layout( rgba32ui ) uniform uimage2D _Seeder;
 
@@ -624,7 +632,7 @@ layout( std430 ) buffer TCamera
 
 uniform sampler2D _Textur;
 
-//############################################################################## ■
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TRay
 
@@ -646,9 +654,11 @@ struct THit
   vec4  Nor;
 };
 
-//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【内部変数】
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
-//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【物体】
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（物体）
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjPlane
 
 void ObjPlane( in TRay Ray, inout THit Hit )
 {
@@ -668,7 +678,7 @@ void ObjPlane( in TRay Ray, inout THit Hit )
   }
 }
 
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjSpher
 
 void ObjSpher( in TRay Ray, inout THit Hit )
 {
@@ -693,7 +703,7 @@ void ObjSpher( in TRay Ray, inout THit Hit )
   }
 }
 
-//------------------------------------------------------------------------------
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjRecta
 
 void ObjRecta( in TRay Ray, inout THit Hit )
 {
@@ -723,100 +733,14 @@ void ObjRecta( in TRay Ray, inout THit Hit )
   }
 }
 
-//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【材質】
-
-TRay MatSkyer( in TRay Ray, in THit Hit )
-{
-  TRay Result;
-
-  Result.Vec = Ray.Vec;
-  Result.Pos = Ray.Pos;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi + texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
-
-  return Result;
-}
-
-//------------------------------------------------------------------------------
-
-TRay MatMirro( in TRay Ray, in THit Hit )
-{
-  TRay Result;
-
-  Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
-
-  return Result;
-}
-
-//------------------------------------------------------------------------------
-
-TRay MatWater( in TRay Ray, in THit Hit )
-{
-  TRay  Result;
-  float C, IOR, F;
-  vec4  Nor;
-
-  C = dot( Hit.Nor.xyz, -Ray.Vec.xyz );
-
-  if( 0 < C )
-  {
-    IOR = 1.333 / 1.000;
-    Nor = +Hit.Nor;
-  }
-  else
-  {
-    IOR = 1.000 / 1.333;
-    Nor = -Hit.Nor;
-  }
-
-  F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
-
-  if ( Rand() < F )
-  {
-    Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
-    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
-  } else {
-    Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
-    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
-  }
-
-  return Result;
-}
-
-//------------------------------------------------------------------------------
-
-TRay MatDiffu( in TRay Ray, in THit Hit )
-{
-  TRay Result;
-
-  Result.Vec.y = sqrt( Rand() );
-
-  float d = sqrt( 1 - Pow2( Result.Vec.y ) );
-  float v = Rand();
-
-  Result.Vec.x = d * cos( Pi2 * v );
-  Result.Vec.z = d * sin( Pi2 * v );
-
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
-
-  return Result;
-}
-
-//##############################################################################
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjImpli
 
 TdFloat MathFunc( TdVec3 P )
 {
   return Sub( Add( Add( Pow2( P.x ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
 }
+
+//------------------------------------------------------------------------------
 
 vec3 MathGrad( vec3 Pos )
 {
@@ -847,6 +771,8 @@ vec3 MathGrad( vec3 Pos )
 
   return Result;
 }
+
+//------------------------------------------------------------------------------
 
 bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 {
@@ -891,6 +817,8 @@ bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
   return false;
 }
 
+//------------------------------------------------------------------------------
+
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
   const vec3  MinP = vec3( -1, -1, -1 ) - FLOAT_EPS2;
@@ -922,7 +850,97 @@ void ObjImpli( in TRay Ray, inout THit Hit )
   }
 }
 
-//------------------------------------------------------------------------------
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（材質）
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatSkyer
+
+TRay MatSkyer( in TRay Ray, in THit Hit )
+{
+  TRay Result;
+
+  Result.Vec = Ray.Vec;
+  Result.Pos = Ray.Pos;
+  Result.Wei = Ray.Wei;
+  Result.Emi = Ray.Emi + texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
+
+  return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatMirro
+
+TRay MatMirro( in TRay Ray, in THit Hit )
+{
+  TRay Result;
+
+  Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Result.Wei = Ray.Wei;
+  Result.Emi = Ray.Emi;
+
+  return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatWater
+
+TRay MatWater( in TRay Ray, in THit Hit )
+{
+  TRay  Result;
+  float C, IOR, F;
+  vec4  Nor;
+
+  C = dot( Hit.Nor.xyz, -Ray.Vec.xyz );
+
+  if( 0 < C )
+  {
+    IOR = 1.333 / 1.000;
+    Nor = +Hit.Nor;
+  }
+  else
+  {
+    IOR = 1.000 / 1.333;
+    Nor = -Hit.Nor;
+  }
+
+  F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
+
+  if ( Rand() < F )
+  {
+    Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
+    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
+    Result.Wei = Ray.Wei;
+    Result.Emi = Ray.Emi;
+  } else {
+    Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
+    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
+    Result.Wei = Ray.Wei;
+    Result.Emi = Ray.Emi;
+  }
+
+  return Result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatDiffu
+
+TRay MatDiffu( in TRay Ray, in THit Hit )
+{
+  TRay Result;
+
+  Result.Vec.y = sqrt( Rand() );
+
+  float d = sqrt( 1 - Pow2( Result.Vec.y ) );
+  float v = Rand();
+
+  Result.Vec.x = d * cos( Pi2 * v );
+  Result.Vec.z = d * sin( Pi2 * v );
+
+  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Result.Wei = Ray.Wei;
+  Result.Emi = Ray.Emi;
+
+  return Result;
+}
+
+//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 void Raytrace( inout TRay Ray )
 {
