@@ -154,6 +154,8 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
+     _Imager.SaveToFile( 'Image.png' );
+
      _Comput.Free;
      _AccumN.Free;
      _Accumr.Free;
