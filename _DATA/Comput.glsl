@@ -49,6 +49,14 @@ struct TdVec3
   TdFloat z;
 };
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloat
+
+struct TdFloatC
+{
+  TdFloat R;
+  TdFloat I;
+};
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
 
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（一般）
@@ -533,6 +541,139 @@ TdVec3 Div( TdVec3 A_, float B_ )
   return Result;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TdFloatC
+
+TdFloatC Add( TdFloatC A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Add( A_.R, B_.R );
+  Result.I = Add( A_.I, B_.I );
+
+  return Result;
+}
+
+TdFloatC Add( TdFloat A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Add( A_, B_.R );
+  Result.I =          B_.I  ;
+
+  return Result;
+}
+
+TdFloatC Add( TdFloatC A_, TdFloat B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Add( A_.R, B_ );
+  Result.I =      A_.I      ;
+
+  return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloatC Sub( TdFloatC A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Sub( A_.R, B_.R );
+  Result.I = Sub( A_.I, B_.I );
+
+  return Result;
+}
+
+TdFloatC Sub( TdFloatC A_, TdFloat B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Sub( A_.R, B_ );
+  Result.I =      A_.I      ;
+
+  return Result;
+}
+
+TdFloatC Sub( TdFloat A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Sub( A_, B_.R );
+  Result.I = Sub( 0 , B_.I );
+
+  return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloatC Mul( TdFloatC A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Sub( Mul( A_.R, B_.R ), Mul( A_.I, B_.I ) );
+  Result.I = Add( Mul( A_.R, B_.I ), Mul( A_.I, B_.R ) );
+
+  return Result;
+}
+
+TdFloatC Mul( float A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Mul( A_, B_.R );
+  Result.I = Mul( A_, B_.I );
+
+  return Result;
+}
+
+TdFloatC Mul( TdFloatC A_, float B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Mul( A_.R, B_ );
+  Result.I = Mul( A_.I, B_ );
+
+  return Result;
+}
+
+//------------------------------------------------------------------------------
+
+TdFloatC Div( TdFloatC A_, TdFloatC B_ )
+{
+  TdFloatC Result;
+  TdFloat  C;
+
+  C = Add( Pow2( B_.R ), Pow2( B_.I ) );
+
+  Result.R = Div( Add( Mul( A_.R, B_.R ), Mul( A_.I, B_.I ) ), C );
+  Result.I = Div( Sub( Mul( A_.I, B_.R ), Mul( A_.R, B_.I ) ), C );
+
+  return Result;
+}
+
+TdFloatC Div( TdFloatC A_, float B_ )
+{
+  TdFloatC Result;
+
+  Result.R = Div( A_.R, B_ );
+  Result.I = Div( A_.I, B_ );
+
+  return Result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TdFloatC Pow2( TdFloatC A_ )
+{
+  return Mul( A_, A_ );
+}
+
+TdFloat Abs2( TdFloatC A_ )
+{
+  return Add( Pow2( A_.R ), Pow2( A_.I ) );
+}
+
 //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&（幾何学）
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% VecToSky
@@ -765,9 +906,21 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjImpli
 
+TdFloatC ComplexCircle( TdFloatC X, TdFloatC Y )
+{
+  return Sub( Add( Pow2( X ), Pow2( Y ) ), TdFloat( 1, 0 ) );
+}
+
 TdFloat MathFunc( TdVec3 P )
 {
-  return Sub( Add( Add( Mul( Pow2( P.x ), 4 ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
+  TdFloatC, X, Y;
+
+  X.R = P.x;
+  X.I = TdFloat( 0, 0 );
+  Y.R = P.y;
+  Y.I = P.z;
+
+  return Sub( Abs2( ComplexCircle( X, Y ) ), 0.01 );
 }
 
 //------------------------------------------------------------------------------
@@ -851,8 +1004,8 @@ bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
-  const vec3  MinP = vec3( -1, -1, -1 ) - FLOAT_EPS2;
-  const vec3  MaxP = vec3( +1, +1, +1 ) + FLOAT_EPS2;
+  const vec3  MinP = vec3( -2, -2, -2 ) - FLOAT_EPS2;
+  const vec3  MaxP = vec3( +2, +2, +2 ) + FLOAT_EPS2;
   const float Td   = 0.1;
   const float T2d  = 1.5 * Td/2;
 
