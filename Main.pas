@@ -19,7 +19,7 @@ uses
   LUX.GPU.OpenGL.Atom.Imager.D2.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D1.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D2.Preset,
-  LUX.GPU.OpenGL.Comput;
+  LUX.GPU.OpenGL.Comput, FMX.Memo.Types;
 
 type
   TForm1 = class(TForm)
@@ -151,8 +151,8 @@ begin
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
 
-     _MouseA.X := 45;
-     _MouseA.Y := 10;
+     _MouseA.X := -60;
+     _MouseA.Y := +10;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
