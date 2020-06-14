@@ -362,19 +362,38 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjPrimi
 
-float DistFunc( vec3 P )
+float TorusDF( in vec3 Pos, in float CirR, in float PipR )
 {
-  const vec2 R = vec2( 1.0, 1.0/3.0 );
   vec2 Q;
 
-  Q = vec2( length( P.yz ) - R.x, P.x );
+  Q = vec2( length( Pos.yz ) - CirR, Pos.x );
 
-  return length( Q ) - R.y;
+  return length( Q ) - PipR;
+}
+
+float WarpTwist( inout vec3 Pos, in float RotA, in float TwiR )
+{
+  float C, S, AR;
+
+  C = cos( RotA * Pos.y );
+  S = sin( RotA * Pos.y );
+
+  Pos.xz = mat2(  C, -S,
+                 +S,  C ) * Pos.xz;
+
+  AR = RotA * TwiR;
+
+  return 1.0 / sqrt( ( 2.0 + AR * ( AR + sqrt( 4.0 + Pow2( AR ) ) ) ) / 2.0 );  // Lipschitz constant
+}
+
+float DistFunc( in vec3 Pos )
+{
+  return WarpTwist( Pos, 1.0, 1.0+1.0/3.0 ) * TorusDF( Pos, 1.0, 1.0/3.0 );
 }
 
 //------------------------------------------------------------------------------
 
-vec3 GetNormal( vec3 P )
+vec3 GetNormal( in vec3 P )
 {
   const vec3 Xd = vec3( FLOAT_EPS2, 0, 0 );
   const vec3 Yd = vec3( 0, FLOAT_EPS2, 0 );
