@@ -393,22 +393,25 @@ vec3 GetNormal( vec3 P )
 
 bool ObjPrimi( in TRay Ray, inout THit Hit )
 {
-  vec3  P0, V0, P;
+  vec3  P0, V0, N0, P, N;
   float D0, S0, A0, T, A, D;
   int   I;
 
   P0 = Ray.Pos.xyz;
   V0 = Ray.Vec.xyz;
-  D0 = DistFunc( P0 );
-  S0 = sign( D0 );
-  A0 = S0 * D0;
 
-  if ( A0 < FLOAT_EPS2 )
+  D0 = DistFunc( P0 );
+
+  if ( abs( D0 ) < FLOAT_EPS3 )
   {
-    P0 = P0 + S0 * FLOAT_EPS3 * GetNormal( P0 );
+    N0 = GetNormal( P0 );
+    S0 = sign( dot( N0, V0 ) );
+    P0 = P0 + ( S0 * FLOAT_EPS3 - D0 ) * N0;
     D0 = DistFunc( P0 );
-    A0 = S0 * D0;
   }
+  else S0 = sign( D0 );
+
+  A0 = S0 * D0;
 
   T =  0;
   A = A0;
@@ -424,9 +427,12 @@ bool ObjPrimi( in TRay Ray, inout THit Hit )
     {
       if ( ( 0 < T ) && ( T < Hit.t ) )
       {
+        N = GetNormal( P );
+        P = P - D * N;
+
         Hit.t   = T;
-        Hit.Pos = vec4(            P  , 1 );
-        Hit.Nor = vec4( GetNormal( P ), 0 );
+        Hit.Pos = vec4( P, 1 );
+        Hit.Nor = vec4( N, 0 );
         Hit.Mat = 2;
 
         return true;
