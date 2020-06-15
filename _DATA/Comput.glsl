@@ -30,6 +30,7 @@ const float FLOAT_EPS  = 1.1920928955078125E-7;
 const float FLOAT_EPS1 = FLOAT_EPS * 1E1;
 const float FLOAT_EPS2 = FLOAT_EPS * 1E2;
 const float FLOAT_EPS3 = FLOAT_EPS * 1E3;
+const float FLOAT_EPS4 = FLOAT_EPS * 1E4;
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
 
@@ -421,11 +422,11 @@ bool ObjPrimi( in TRay Ray, inout THit Hit )
 
   D0 = DistFunc( P0 );
 
-  if ( abs( D0 ) < FLOAT_EPS3 )
+  if ( abs( D0 ) < FLOAT_EPS4 )
   {
     N0 = GetNormal( P0 );
     S0 = sign( dot( N0, V0 ) );
-    P0 = P0 + ( S0 * FLOAT_EPS3 - D0 ) * N0;
+    P0 = P0 + ( S0 * FLOAT_EPS4 - D0 ) * N0;
     D0 = DistFunc( P0 );
   }
   else S0 = sign( D0 );
@@ -442,7 +443,7 @@ bool ObjPrimi( in TRay Ray, inout THit Hit )
     D = DistFunc( P );
     A = S0 * D;
 
-    if ( A < FLOAT_EPS2 )
+    if ( A < FLOAT_EPS3 )
     {
       if ( ( 0 < T ) && ( T < Hit.t ) )
       {
