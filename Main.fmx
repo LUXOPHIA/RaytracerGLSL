@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'RaytracerGLSL'
-  ClientHeight = 666
+  ClientHeight = 516
   ClientWidth = 840
   Position = ScreenCenter
   FormFactor.Width = 320
@@ -13,7 +13,7 @@ object Form1: TForm1
   OnDestroy = FormDestroy
   DesignerMasterStyle = 0
   object Timer1: TTimer
-    Interval = 10
+    Interval = 100
     OnTimer = Timer1Timer
     Left = 35
     Top = 60
@@ -25,16 +25,16 @@ object Form1: TForm1
     Margins.Right = 10.000000000000000000
     Margins.Bottom = 10.000000000000000000
     Size.Width = 820.000000000000000000
-    Size.Height = 646.000000000000000000
+    Size.Height = 496.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
       820s
-      620s
+      470s
       820s
-      620s)
+      470s)
     object TabItem1: TTabItem
       CustomIcon = <
         item
@@ -59,7 +59,7 @@ object Form1: TForm1
         Margins.Right = 10.000000000000000000
         Margins.Bottom = 10.000000000000000000
         Size.Width = 800.000000000000000000
-        Size.Height = 600.000000000000000000
+        Size.Height = 450.000000000000000000
         Size.PlatformDefault = False
         OnMouseDown = Image1MouseDown
         OnMouseMove = Image1MouseMove
@@ -88,11 +88,11 @@ object Form1: TForm1
         Margins.Right = 10.000000000000000000
         Margins.Bottom = 10.000000000000000000
         Size.Width = 800.000000000000000000
-        Size.Height = 600.000000000000000000
+        Size.Height = 450.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 800.000000000000000000
-        Viewport.Height = 600.000000000000000000
+        Viewport.Width = 796.000000000000000000
+        Viewport.Height = 446.000000000000000000
       end
     end
   end

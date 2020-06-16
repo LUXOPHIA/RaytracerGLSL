@@ -127,7 +127,7 @@ begin
      Image1.AutoCapture := True;
 
      _ImageX := 800;
-     _ImageY := 600;
+     _ImageY := 450;
 
      _Comput := TGLComput               .Create;
      _Seeder := TGLCelIma2D_TInt32u4D   .Create;
@@ -151,8 +151,8 @@ begin
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
 
-     _MouseA.X := -60;
-     _MouseA.Y := +10;
+     _MouseA.X := +80;
+     _MouseA.Y := -10;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -173,7 +173,7 @@ procedure TForm1.Timer1Timer(Sender: TObject);
 begin
      _Camera[ 0 ] := TSingleM4.RotateY( DegToRad( -_MouseA.X ) )
                    * TSingleM4.RotateX( DegToRad( -_MouseA.Y ) )
-                   * TSingleM4.Translate( 0, 0, 3 );
+                   * TSingleM4.Translate( 0, 0, 3.5 );
 
      _Comput.Run;
 

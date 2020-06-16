@@ -363,33 +363,65 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjPrimi
 
-float TorusDF( in vec3 Pos, in float CirR, in float PipR )
+void SquareFold( inout vec3 Z, inout float Zd )
 {
-  vec2 Q;
+  const float FoldLimit = 1.0;
 
-  Q = vec2( length( Pos.yz ) - CirR, Pos.x );
-
-  return length( Q ) - PipR;
+  Z = clamp( Z, -FoldLimit, +FoldLimit ) * 2.0 - Z;
 }
 
-float WarpTwist( inout vec3 Pos, in float RotA, in float TwiR )
+void SphereFold( inout vec3 Z, inout float Zd )
 {
-  float C, S, AR;
+  const float FixRadius2 = 1.9;
+  const float MinRadius2 = 0.1;
 
-  C = cos( RotA * Pos.y );
-  S = sin( RotA * Pos.y );
+  float R2, T;
 
-  Pos.xz = mat2(  C, -S,
-                 +S,  C ) * Pos.xz;
+  R2 = dot( Z, Z );
 
-  AR = RotA * TwiR;
+  if ( R2 < MinRadius2 )
+  {
+    T   = FixRadius2 / MinRadius2;
+    Z  *= T;
+    Zd *= T;
+  }
+  else
+  if ( R2 < FixRadius2 )
+  {
+    T   = FixRadius2 / R2;
+    Z  *= T;
+    Zd *= T;
+  }
+}
 
-  return 1.0 / sqrt( ( 2.0 + AR * ( AR + sqrt( 4.0 + Pow2( AR ) ) ) ) / 2.0 );  // Lipschitz constant
+float MandelBox( in vec3 Z )
+{
+  const float Scale = -2.8;
+
+  vec3  Offset;
+  float Rd, R;
+  int   N;
+
+  Offset = Z;
+  Rd     = 1.0;
+
+  for( N = 1; N <= 15; ++N )
+  {
+    SquareFold( Z, Rd );
+    SphereFold( Z, Rd );
+
+    Z  = Scale * Z + Offset;
+    Rd = Rd * abs( Scale ) + 1.0;
+  }
+
+  R = length( Z );
+
+  return R / abs( Rd );
 }
 
 float DistFunc( in vec3 Pos )
 {
-  return WarpTwist( Pos, 1.0, 1.0+1.0/3.0 ) * TorusDF( Pos, 1.0, 1.0/3.0 );
+  return MandelBox( Pos );
 }
 
 //------------------------------------------------------------------------------
@@ -453,7 +485,7 @@ bool ObjPrimi( in TRay Ray, inout THit Hit )
         Hit.t   = T;
         Hit.Pos = P;
         Hit.Nor = N;
-        Hit.Mat = 2;
+        Hit.Mat = 1;
 
         return true;
       }
@@ -483,7 +515,7 @@ bool MatMirro( inout TRay Ray, in THit Hit )
   Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Ray.Vec = reflect( Ray.Vec, Hit.Nor );
 
-  return true;
+  return Rand() < 0.5;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatWater
@@ -614,8 +646,8 @@ void main()
   {
     E = vec3( 0.02 * RandCirc(), 0 );
 
-    S.x = 4.0 * (       ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 0.5 );
-    S.y = 3.0 * ( 0.5 - ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y       );
+    S.x = 16.0/4 * (       ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 0.5 );
+    S.y =  9.0/4 * ( 0.5 - ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y       );
     S.z = -2;
 
     R.Pos = vec3( _Camera * vec4(                E  , 1 ) );
