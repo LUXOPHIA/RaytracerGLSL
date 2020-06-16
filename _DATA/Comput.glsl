@@ -714,8 +714,8 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 {
   float B, C, D, t;
 
-  B = dot( Ray.Pos.xyz, Ray.Vec.xyz );
-  C = length2( Ray.Pos.xyz ) - 1;
+  B = dot( Ray.Pos, Ray.Vec );
+  C = length2( Ray.Pos ) - 1;
 
   D = Pow2( B ) - C;
 
@@ -820,7 +820,7 @@ bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 
   for ( N = 1; N <= LoopN; N++ )
   {
-    P = Add( Mul( Ray.Vec.xyz, T ), Ray.Pos.xyz );
+    P = Add( Mul( Ray.Vec, T ), Ray.Pos );
 
     F = MathFunc( P );
 
@@ -886,7 +886,7 @@ void ObjImpli( in TRay Ray, inout THit Hit )
 
 bool MatSkyer( inout TRay Ray, in THit Hit )
 {
-  Ray.Emi += texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
+  Ray.Emi += texture( _Textur, VecToSky( Ray.Vec ) ).rgb;
 
   return false;
 }
@@ -896,7 +896,7 @@ bool MatSkyer( inout TRay Ray, in THit Hit )
 bool MatMirro( inout TRay Ray, in THit Hit )
 {
   Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Ray.Vec = reflect( Ray.Vec.xyz, Hit.Nor.xyz );
+  Ray.Vec = reflect( Ray.Vec, Hit.Nor );
 
   return true;
 }
@@ -909,7 +909,7 @@ bool MatWater( inout TRay Ray, in THit Hit )
   float C, IOR, F;
   vec3  Nor;
 
-  C = dot( Hit.Nor.xyz, -Ray.Vec.xyz );
+  C = dot( Hit.Nor, -Ray.Vec );
 
   if( 0 < C )
   {
@@ -922,15 +922,15 @@ bool MatWater( inout TRay Ray, in THit Hit )
     Nor = -Hit.Nor;
   }
 
-  F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
+  F = Fresnel( Ray.Vec, Nor, IOR );
 
   if ( Rand() < F )
   {
     Ray.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
-    Ray.Vec = reflect( Ray.Vec.xyz, Nor.xyz );
+    Ray.Vec = reflect( Ray.Vec, Nor );
   } else {
     Ray.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
-    Ray.Vec = refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR );
+    Ray.Vec = refract( Ray.Vec, Nor, 1 / IOR );
   }
 
   return true;
@@ -944,7 +944,7 @@ bool MatDiffu( inout TRay Ray, in THit Hit )
   mat3  M;
   float R, T;
 
-  AZ = Hit.Nor.xyz;
+  AZ = Hit.Nor;
 
   switch( MinI( abs( AZ ) ) )
   {
