@@ -363,36 +363,47 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjPrimi
 
-float TorusDF( in vec3 Pos, in float CirR, in float PipR )
+float Mandelbulb( in vec3 Pos, in float PowN )
 {
-  vec2 Q;
+  vec3  Z;
+  float Rd, R, AY, AX, Zr;
+  int   i;
 
-  Q = vec2( length( Pos.yz ) - CirR, Pos.x );
+  Z  = Pos;
+  Rd = 1.0;
 
-  return length( Q ) - PipR;
-}
+  for ( i = 0; i < 8; i++ )
+  {
+    R = length( Z );
 
-float WarpTwist( inout vec3 Pos, in float RotA, in float TwiR )
-{
-  float C, S, AR;
+    if ( R > 10 ) break;
 
-  C = cos( RotA * Pos.y );
-  S = sin( RotA * Pos.y );
+    AY = acos( Z.y / R );
+    AX = atan( Z.z, Z.x );
 
-  Pos.xz = mat2(  C, -S,
-                 +S,  C ) * Pos.xz;
+    Rd = pow( R, PowN - 1.0 ) * PowN * Rd + 1.0;
 
-  AR = RotA * TwiR;
+    Zr = pow( R, PowN );
 
-  return 1.0 / sqrt( ( 2.0 + AR * ( AR + sqrt( 4.0 + Pow2( AR ) ) ) ) / 2.0 );  // Lipschitz constant
-}
+    AY *= PowN;
+    AX *= PowN;
 
-float DistFunc( in vec3 Pos )
-{
-  return WarpTwist( Pos, 1.0, 1.0+1.0/3.0 ) * TorusDF( Pos, 1.0, 1.0/3.0 );
+    Z = Zr * vec3( sin( AY ) * cos( AX ),
+                   cos( AY ),
+                   sin( AY ) * sin( AX ) );
+
+    Z += Pos;
+  }
+
+  return 0.5 * log( R ) * R / Rd;
 }
 
 //------------------------------------------------------------------------------
+
+float DistFunc( in vec3 Pos )
+{
+  return Mandelbulb( Pos, 8.0 );
+}
 
 vec3 GetNormal( in vec3 P )
 {
@@ -453,7 +464,7 @@ bool ObjPrimi( in TRay Ray, inout THit Hit )
         Hit.t   = T;
         Hit.Pos = P;
         Hit.Nor = N;
-        Hit.Mat = 2;
+        Hit.Mat = 1;
 
         return true;
       }
@@ -483,7 +494,7 @@ bool MatMirro( inout TRay Ray, in THit Hit )
   Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
   Ray.Vec = reflect( Ray.Vec, Hit.Nor );
 
-  return true;
+  return Rand() < 0.5;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatWater
@@ -614,8 +625,8 @@ void main()
   {
     E = vec3( 0.02 * RandCirc(), 0 );
 
-    S.x = 4.0 * (       ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 0.5 );
-    S.y = 3.0 * ( 0.5 - ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y       );
+    S.x = 4.0/2 * (       ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 0.5 );
+    S.y = 3.0/2 * ( 0.5 - ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y       );
     S.z = -2;
 
     R.Pos = vec3( _Camera * vec4(                E  , 1 ) );
