@@ -77,23 +77,23 @@ float length2( in vec3 V )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MinI
 
-int MinI( in float A, in float B, in float C )
+int MinI( in vec3 V )
 {
-  if ( A <= B ) {
-    if ( A <= C ) return 0; else return 2;
+  if ( V.x <= V.y ) {
+    if ( V.x <= V.z ) return 0; else return 2;
   } else {
-    if ( B <= C ) return 1; else return 2;
+    if ( V.y <= V.z ) return 1; else return 2;
   }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MaxI
 
-int MaxI( in float A, in float B, in float C )
+int MaxI( in vec3 V )
 {
-  if ( A >= B ) {
-    if ( A >= C ) return 0; else return 2;
+  if ( V.x >= V.y ) {
+    if ( V.x >= V.z ) return 0; else return 2;
   } else {
-    if ( B >= C ) return 1; else return 2;
+    if ( V.y >= V.z ) return 1; else return 2;
   }
 }
 
@@ -718,7 +718,7 @@ bool HitSlab( in  float RayP, in  float RayV,
 
 //------------------------------------------------------------------------------
 
-bool HitAABB( in  vec4  RayP, in  vec4  RayV,
+bool HitAABB( in  vec3  RayP, in  vec3  RayV,
               in  vec3  MinP, in  vec3  MaxP,
               out float MinT, out float MaxT,
               out int   IncA, out int   OutA )
@@ -729,8 +729,8 @@ bool HitAABB( in  vec4  RayP, in  vec4  RayV,
     && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, T0.y, T1.y )
     && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, T0.z, T1.z ) )
   {
-    IncA = MaxI( T0.x, T0.y, T0.z );  MinT = T0[ IncA ];
-    OutA = MinI( T1.x, T1.y, T1.z );  MaxT = T1[ OutA ];
+    IncA = MaxI( T0 );  MinT = T0[ IncA ];
+    OutA = MinI( T1 );  MaxT = T1[ OutA ];
 
     return ( MinT < MaxT );
   }
@@ -809,8 +809,8 @@ uniform sampler2D _Textur;
 
 struct TRay
 {
-  vec4 Pos;
-  vec4 Vec;
+  vec3 Pos;
+  vec3 Vec;
   vec3 Wei;
   vec3 Emi;
 };
@@ -821,8 +821,8 @@ struct THit
 {
   float t;
   int   Mat;
-  vec4  Pos;
-  vec4  Nor;
+  vec3  Pos;
+  vec3  Nor;
 };
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【ルーチン】
@@ -843,7 +843,7 @@ void ObjPlane( in TRay Ray, inout THit Hit )
     {
       Hit.t   = t;
       Hit.Pos = Ray.Pos + t * Ray.Vec;
-      Hit.Nor = vec4( 0, 1, 0, 0 );
+      Hit.Nor = vec3( 0, 1, 0 );
       Hit.Mat = 3;
     }
   }
@@ -855,8 +855,8 @@ void ObjSpher( in TRay Ray, inout THit Hit )
 {
   float B, C, D, t;
 
-  B = dot( Ray.Pos.xyz, Ray.Vec.xyz );
-  C = length2( Ray.Pos.xyz ) - 1;
+  B = dot( Ray.Pos, Ray.Vec );
+  C = length2( Ray.Pos ) - 1;
 
   D = Pow2( B ) - C;
 
@@ -891,12 +891,12 @@ void ObjRecta( in TRay Ray, inout THit Hit )
     if ( FLOAT_EPS2 < MaxT ) T = MaxT;
     else return;
 
-    if ( MaxT < Hit.t )
+    if ( T < Hit.t )
     {
       Hit.t   = T;
       Hit.Pos = Ray.Pos + Hit.t * Ray.Vec;
 
-      Hit.Nor = vec4( 0 );
+      Hit.Nor = vec3( 0 );
       Hit.Nor[ IncA ] = -sign( Ray.Vec[ IncA ] );
 
       Hit.Mat = 2;
@@ -973,7 +973,7 @@ bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 
   for ( N = 1; N <= LoopN; N++ )
   {
-    P = Add( Mul( Ray.Vec.xyz, T ), Ray.Pos.xyz );
+    P = Add( Mul( Ray.Vec, T ), Ray.Pos );
 
     F = MathFunc( P );
 
@@ -1023,8 +1023,8 @@ void ObjImpli( in TRay Ray, inout THit Hit )
       if ( HitFunc( Ray, T2d, T, P ) && ( 0 < T ) && ( T < MaxT ) && ( T < Hit.t ) )
       {
         Hit.t   = T;
-        Hit.Pos = vec4( P, 1 );
-        Hit.Nor = vec4( normalize( MathGrad( P ) ), 0 );
+        Hit.Pos = P;
+        Hit.Nor = normalize( MathGrad( P ) );
         Hit.Mat = 2;
 
         break;
@@ -1037,41 +1037,32 @@ void ObjImpli( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatSkyer
 
-TRay MatSkyer( in TRay Ray, in THit Hit )
+bool MatSkyer( inout TRay Ray, in THit Hit )
 {
-  TRay Result;
+  Ray.Emi += texture( _Textur, VecToSky( Ray.Vec ) ).rgb;
 
-  Result.Vec = Ray.Vec;
-  Result.Pos = Ray.Pos;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi + texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
-
-  return Result;
+  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatMirro
 
-TRay MatMirro( in TRay Ray, in THit Hit )
+bool MatMirro( inout TRay Ray, in THit Hit )
 {
-  TRay Result;
+  Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Ray.Vec = reflect( Ray.Vec, Hit.Nor );
 
-  Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
-
-  return Result;
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatWater
 
-TRay MatWater( in TRay Ray, in THit Hit )
+bool MatWater( inout TRay Ray, in THit Hit )
 {
   TRay  Result;
   float C, IOR, F;
-  vec4  Nor;
+  vec3  Nor;
 
-  C = dot( Hit.Nor.xyz, -Ray.Vec.xyz );
+  C = dot( Hit.Nor, -Ray.Vec );
 
   if( 0 < C )
   {
@@ -1084,43 +1075,63 @@ TRay MatWater( in TRay Ray, in THit Hit )
     Nor = -Hit.Nor;
   }
 
-  F = Fresnel( Ray.Vec.xyz, Nor.xyz, IOR );
+  F = Fresnel( Ray.Vec, Nor, IOR );
 
   if ( Rand() < F )
   {
-    Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
-    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
+    Ray.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
+    Ray.Vec = reflect( Ray.Vec, Nor );
   } else {
-    Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
-    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
+    Ray.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
+    Ray.Vec = refract( Ray.Vec, Nor, 1 / IOR );
   }
 
-  return Result;
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatDiffu
 
-TRay MatDiffu( in TRay Ray, in THit Hit )
+bool MatDiffu( inout TRay Ray, in THit Hit )
 {
-  TRay Result;
+  vec3  AX, AY, AZ, DX, DY, V;
+  mat3  M;
+  float R, T;
 
-  Result.Vec.y = sqrt( Rand() );
+  AZ = Hit.Nor;
 
-  float d = sqrt( 1 - Pow2( Result.Vec.y ) );
-  float v = Rand();
+  switch( MinI( abs( AZ ) ) )
+  {
+    case 0:
+        DX = vec3( 1, 0, 0 );
+        AY = normalize( cross( AZ, DX ) );
+        AX = cross( AY, AZ );
+      break;
+    case 1:
+        DY = vec3( 0, 1, 0 );
+        AX = normalize( cross( DY, AZ ) );
+        AY = cross( AZ, AX );
+      break;
+    case 2:
+        DX = vec3( 0, 0, 1 );
+        AY = normalize( cross( AZ, DX ) );
+        AX = cross( AY, AZ );
+      break;
+  }
 
-  Result.Vec.x = d * cos( Pi2 * v );
-  Result.Vec.z = d * sin( Pi2 * v );
+  M = mat3( AX, AY, AZ );
 
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
+  V.z = sqrt( Rand() );
 
-  return Result;
+  R = sqrt( 1 - Pow2( V.z ) );
+  T = Rand();
+
+  V.x = R * cos( Pi2 * T );
+  V.y = R * sin( Pi2 * T );
+
+  Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Ray.Vec = M * V;
+
+  return true;
 }
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1132,7 +1143,7 @@ void Raytrace( inout TRay Ray )
 
   for ( L = 1; L <= 8; L++ )
   {
-    Hit = THit( FLOAT_MAX, 0, vec4( 0 ), vec4( 0 ) );
+    Hit = THit( FLOAT_MAX, 0, vec3( 0 ), vec3( 0 ) );
 
     ///// 物体
 
@@ -1145,10 +1156,10 @@ void Raytrace( inout TRay Ray )
 
     switch( Hit.Mat )
     {
-      case 0: Ray = MatSkyer( Ray, Hit ); return;
-      case 1: Ray = MatMirro( Ray, Hit ); break;
-      case 2: Ray = MatWater( Ray, Hit ); break;
-      case 3: Ray = MatDiffu( Ray, Hit ); break;
+      case 0: if ( MatSkyer( Ray, Hit ) ) break; else return;
+      case 1: if ( MatMirro( Ray, Hit ) ) break; else return;
+      case 2: if ( MatWater( Ray, Hit ) ) break; else return;
+      case 3: if ( MatDiffu( Ray, Hit ) ) break; else return;
     }
   }
 }
@@ -1158,7 +1169,7 @@ void Raytrace( inout TRay Ray )
 void main()
 {
   uint N;
-  vec4 E, S;
+  vec3 E, S;
   TRay R;
   vec3 A, C, P;
 
@@ -1169,15 +1180,14 @@ void main()
 
   for( N = _AccumN+1; N <= _AccumN+16; N++ )
   {
-    E = vec4( 0.02 * RandCirc(), 0, 1 );
+    E = vec3( 0.02 * RandCirc(), 0 );
 
-    S.x =       4.0 * ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 2.0;
-    S.y = 1.5 - 3.0 * ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y      ;
+    S.x = 4.0 * (       ( _WorkID.x + 0.5 + RandBS4() ) / _WorksN.x - 0.5 );
+    S.y = 3.0 * ( 0.5 - ( _WorkID.y + 0.5 + RandBS4() ) / _WorksN.y       );
     S.z = -2;
-    S.w = 1;
 
-    R.Pos = _Camera * E;
-    R.Vec = _Camera * normalize( S - E );
+    R.Pos = vec3( _Camera * vec4(                E  , 1 ) );
+    R.Vec = vec3( _Camera * vec4( normalize( S - E ), 0 ) );
     R.Wei = vec3( 1 );
     R.Emi = vec3( 0 );
 
