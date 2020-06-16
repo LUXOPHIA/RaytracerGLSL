@@ -884,35 +884,26 @@ void ObjImpli( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatSkyer
 
-TRay MatSkyer( in TRay Ray, in THit Hit )
+bool MatSkyer( inout TRay Ray, in THit Hit )
 {
-  TRay Result;
+  Ray.Emi += texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
 
-  Result.Vec = Ray.Vec;
-  Result.Pos = Ray.Pos;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi + texture( _Textur, VecToSky( Ray.Vec.xyz ) ).rgb;
-
-  return Result;
+  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatMirro
 
-TRay MatMirro( in TRay Ray, in THit Hit )
+bool MatMirro( inout TRay Ray, in THit Hit )
 {
-  TRay Result;
+  Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Ray.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
 
-  Result.Vec = vec4( reflect( Ray.Vec.xyz, Hit.Nor.xyz ), 0 );
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
-
-  return Result;
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatWater
 
-TRay MatWater( in TRay Ray, in THit Hit )
+bool MatWater( inout TRay Ray, in THit Hit )
 {
   TRay  Result;
   float C, IOR, F;
@@ -935,25 +926,20 @@ TRay MatWater( in TRay Ray, in THit Hit )
 
   if ( Rand() < F )
   {
-    Result.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
-    Result.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
+    Ray.Pos = Hit.Pos + FLOAT_EPS2 * Nor;
+    Ray.Vec = vec4( reflect( Ray.Vec.xyz, Nor.xyz ), 0 );
   } else {
-    Result.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
-    Result.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
-    Result.Wei = Ray.Wei;
-    Result.Emi = Ray.Emi;
+    Ray.Pos = Hit.Pos - FLOAT_EPS2 * Nor;
+    Ray.Vec = vec4( refract( Ray.Vec.xyz, Nor.xyz, 1 / IOR ), 0 );
   }
 
-  return Result;
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MatDiffu
 
-TRay MatDiffu( in TRay Ray, in THit Hit )
+bool MatDiffu( inout TRay Ray, in THit Hit )
 {
-  TRay  Result;
   vec3  AX, AY, AZ, DX, DY, V;
   mat3  M;
   float R, T;
@@ -989,12 +975,10 @@ TRay MatDiffu( in TRay Ray, in THit Hit )
   V.x = R * cos( Pi2 * T );
   V.y = R * sin( Pi2 * T );
 
-  Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
-  Result.Vec = vec4( M * V, 0 );
-  Result.Wei = Ray.Wei;
-  Result.Emi = Ray.Emi;
+  Ray.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Ray.Vec = vec4( M * V, 0 );
 
-  return Result;
+  return true;
 }
 
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1019,10 +1003,10 @@ void Raytrace( inout TRay Ray )
 
     switch( Hit.Mat )
     {
-      case 0: Ray = MatSkyer( Ray, Hit ); return;
-      case 1: Ray = MatMirro( Ray, Hit ); break;
-      case 2: Ray = MatWater( Ray, Hit ); break;
-      case 3: Ray = MatDiffu( Ray, Hit ); break;
+      case 0: if ( MatSkyer( Ray, Hit ) ) break; else return;
+      case 1: if ( MatMirro( Ray, Hit ) ) break; else return;
+      case 2: if ( MatWater( Ray, Hit ) ) break; else return;
+      case 3: if ( MatDiffu( Ray, Hit ) ) break; else return;
     }
   }
 }
