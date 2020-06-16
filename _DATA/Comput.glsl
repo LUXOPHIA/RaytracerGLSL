@@ -69,23 +69,23 @@ float length2( in vec3 V )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MinI
 
-int MinI( in float A, in float B, in float C )
+int MinI( in vec3 V )
 {
-  if ( A <= B ) {
-    if ( A <= C ) return 0; else return 2;
+  if ( V.x <= V.y ) {
+    if ( V.x <= V.z ) return 0; else return 2;
   } else {
-    if ( B <= C ) return 1; else return 2;
+    if ( V.y <= V.z ) return 1; else return 2;
   }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MaxI
 
-int MaxI( in float A, in float B, in float C )
+int MaxI( in vec3 V )
 {
-  if ( A >= B ) {
-    if ( A >= C ) return 0; else return 2;
+  if ( V.x >= V.y ) {
+    if ( V.x >= V.z ) return 0; else return 2;
   } else {
-    if ( B >= C ) return 1; else return 2;
+    if ( V.y >= V.z ) return 1; else return 2;
   }
 }
 
@@ -588,8 +588,8 @@ bool HitAABB( in  vec4  RayP, in  vec4  RayV,
     && HitSlab( RayP.y, RayV.y, MinP.y, MaxP.y, T0.y, T1.y )
     && HitSlab( RayP.z, RayV.z, MinP.z, MaxP.z, T0.z, T1.z ) )
   {
-    IncA = MaxI( T0.x, T0.y, T0.z );  MinT = T0[ IncA ];
-    OutA = MinI( T1.x, T1.y, T1.z );  MaxT = T1[ OutA ];
+    IncA = MaxI( T0 );  MinT = T0[ IncA ];
+    OutA = MinI( T1 );  MaxT = T1[ OutA ];
 
     return ( MinT < MaxT );
   }
@@ -750,7 +750,7 @@ void ObjRecta( in TRay Ray, inout THit Hit )
     if ( FLOAT_EPS2 < MaxT ) T = MaxT;
     else return;
 
-    if ( MaxT < Hit.t )
+    if ( T < Hit.t )
     {
       Hit.t   = T;
       Hit.Pos = Ray.Pos + Hit.t * Ray.Vec;
@@ -953,17 +953,44 @@ TRay MatWater( in TRay Ray, in THit Hit )
 
 TRay MatDiffu( in TRay Ray, in THit Hit )
 {
-  TRay Result;
+  TRay  Result;
+  vec3  AX, AY, AZ, DX, DY, V;
+  mat3  M;
+  float R, T;
 
-  Result.Vec.y = sqrt( Rand() );
+  AZ = Hit.Nor.xyz;
 
-  float d = sqrt( 1 - Pow2( Result.Vec.y ) );
-  float v = Rand();
+  switch( MinI( abs( AZ ) ) )
+  {
+    case 0:
+        DX = vec3( 1, 0, 0 );
+        AY = normalize( cross( AZ, DX ) );
+        AX = cross( AY, AZ );
+      break;
+    case 1:
+        DY = vec3( 0, 1, 0 );
+        AX = normalize( cross( DY, AZ ) );
+        AY = cross( AZ, AX );
+      break;
+    case 2:
+        DX = vec3( 0, 0, 1 );
+        AY = normalize( cross( AZ, DX ) );
+        AX = cross( AY, AZ );
+      break;
+  }
 
-  Result.Vec.x = d * cos( Pi2 * v );
-  Result.Vec.z = d * sin( Pi2 * v );
+  M = mat3( AX, AY, AZ );
+
+  V.z = sqrt( Rand() );
+
+  R = sqrt( 1 - Pow2( V.z ) );
+  T = Rand();
+
+  V.x = R * cos( Pi2 * T );
+  V.y = R * sin( Pi2 * T );
 
   Result.Pos = Hit.Pos + FLOAT_EPS2 * Hit.Nor;
+  Result.Vec = vec4( M * V, 0 );
   Result.Wei = Ray.Wei;
   Result.Emi = Ray.Emi;
 
