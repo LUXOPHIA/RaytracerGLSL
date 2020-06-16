@@ -5,7 +5,8 @@ interface //####################################################################
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Objects, FMX.TabControl, FMX.ScrollBox, FMX.Memo, LUX.FMX.Controls,
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Objects, FMX.TabControl,
+  FMX.ScrollBox, FMX.Memo, LUX.FMX.Controls, FMX.Memo.Types,
   Winapi.OpenGL, Winapi.OpenGLext,
   LUX, LUX.D1, LUX.D2, LUX.D3, LUX.D4, LUX.D4x4,
   LUX.Random.Xoshiro.B32,
@@ -151,8 +152,8 @@ begin
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
 
-     _MouseA.X := 45;
-     _MouseA.Y := 10;
+     _MouseA.X := -60;
+     _MouseA.Y := -10;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
