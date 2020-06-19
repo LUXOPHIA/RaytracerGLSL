@@ -51,6 +51,7 @@ type
     _Imager :TGLCelIma2D_TAlphaColorF;
     _Camera :TGLStoBuf<TSingleM4>;
     _Textur :TGLCelTex2D_TAlphaColorF;
+    _Mapper :TGLCelIma2D_TAlphaColorF;
     ///// メソッド
     procedure InitComput;
     procedure InitSeeder;
@@ -97,6 +98,7 @@ begin
      _Comput.Imagers.Add( '_Imager', _Imager );
      _Comput.Buffers.Add( 'TCamera', _Camera );
      _Comput.Texturs.Add( '_Textur', _Textur );
+     _Comput.Imagers.Add( '_Mapper', _Mapper );
 end;
 
 //------------------------------------------------------------------------------
@@ -136,6 +138,7 @@ begin
      _Imager := TGLCelIma2D_TAlphaColorF.Create;
      _Camera := TGLStoBuf<TSingleM4>    .Create( GL_DYNAMIC_DRAW );
      _Textur := TGLCelTex2D_TAlphaColorF.Create;
+     _Mapper := TGLCelIma2D_TAlphaColorF.Create;
 
      InitComput;
 
@@ -151,6 +154,8 @@ begin
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
 
+     _Mapper.LoadFromFile( '..\..\_DATA\Mapper.png' );
+
      _MouseA.X := 45;
      _MouseA.Y := 10;
 end;
@@ -165,6 +170,7 @@ begin
      _Imager.Free;
      _Camera.Free;
      _Textur.Free;
+     _Mapper.Free;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
