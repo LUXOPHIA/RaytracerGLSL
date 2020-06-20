@@ -151,8 +151,8 @@ begin
 
      _Textur.Imager.LoadFromFileHDR( '..\..\_DATA\Luxo-Jr_2000x1000.hdr' );
 
-     _MouseA.X := 45;
-     _MouseA.Y := 10;
+     _MouseA.X := +10;
+     _MouseA.Y := +10;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
