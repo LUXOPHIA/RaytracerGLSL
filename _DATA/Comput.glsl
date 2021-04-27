@@ -662,6 +662,8 @@ layout( std430 ) buffer TCamera
 
 uniform sampler2D _Textur;
 
+layout( rgba32f ) readonly uniform image2D _Mapper;
+
 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$【型】
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TRay
@@ -765,9 +767,32 @@ void ObjRecta( in TRay Ray, inout THit Hit )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ObjImpli
 
+const vec3  FieldPosMin = vec3( -5, -1, -5 ) + FLOAT_EPS2;
+const vec3  FieldPosMax = vec3( +5, +1, +5 ) - FLOAT_EPS2;
+const uvec2 FieldDivN   = uvec2( 100, 100 );
+
 TdFloat MathFunc( TdVec3 P )
 {
-  return Sub( Add( Add( Mul( Pow2( P.x ), 4 ), Pow2( P.y ) ), Pow2( P.z ) ), 1 );
+  TdFloat GX, GY, GXd, GYd, F00, F01, F10, F11, F0, F1, F;
+  int     GXi, GYi;
+
+  GX = Mul( Sub( P.x, FieldPosMin.x ), FieldDivN.x / ( FieldPosMax.x - FieldPosMin.x ) );
+  GY = Mul( Sub( P.z, FieldPosMin.z ), FieldDivN.y / ( FieldPosMax.z - FieldPosMin.z ) );
+
+  GXi = int( floor( GX.o ) );  GXd = Sub( GX, GXi );
+  GYi = int( floor( GY.o ) );  GYd = Sub( GY, GYi );
+
+  F00 = TdFloat( imageLoad( _Mapper, ivec2( GXi+0, GYi+0 )*10 ).r, 0 );
+  F01 = TdFloat( imageLoad( _Mapper, ivec2( GXi+1, GYi+0 )*10 ).r, 0 );
+  F10 = TdFloat( imageLoad( _Mapper, ivec2( GXi+0, GYi+1 )*10 ).r, 0 );
+  F11 = TdFloat( imageLoad( _Mapper, ivec2( GXi+1, GYi+1 )*10 ).r, 0 );
+
+  F0 = Add( Mul( Sub( F01, F00 ), GXd ), F00 );
+  F1 = Add( Mul( Sub( F11, F10 ), GXd ), F10 );
+
+  F = Add( Mul( Sub( F1, F0 ), GYd ), F0 );
+
+  return Sub( P.y, Add( Mul( FieldPosMax.y- FieldPosMin.y, F ), FieldPosMin.y ) );
 }
 
 //------------------------------------------------------------------------------
@@ -849,10 +874,223 @@ bool HitFunc( in TRay Ray, in float T2d, inout float HitT, out vec3 HitP )
 
 //------------------------------------------------------------------------------
 
+vec3  a, b, c, d;
+float A1, B1, C1, D1, A2, B2, C2, D2;
+
+float CalcU( in float V )
+{
+  float U1, U2;
+
+  U1 = V *   A2        +   B2       ;
+  U2 = V * ( A2 - A1 ) + ( B2 - B1 );
+
+  if ( abs( U2 ) >= abs( U1 ) )
+    return ( V * ( C1 - C2 ) + ( D1 - D2 ) ) / U2;
+  else
+    return ( V *       -C2   +       -D2 ) / U1;
+}
+
+bool BilinearPatch( in  vec3 RayP, in  vec3 RayV,
+                    in  vec3 P00 , in  vec3 P01 ,
+                    in  vec3 P10 , in  vec3 P11 ,
+                    out vec2 Tex0, out vec2 Tex1 )
+{
+  vec3  r, q;
+  float A, B, C, D;
+
+  r = RayP;
+  q = RayV;
+
+  a = P11 - P10 - P01 + P00;
+  b =       P10       - P00;
+  c =             P01 - P00;
+  d =                   P00;
+
+  A1 = a.x * q.z - a.z * q.x;
+  B1 = b.x * q.z - b.z * q.x;
+  C1 = c.x * q.z - c.z * q.x;
+  D1 = ( d.x - r.x ) * q.z - ( d.z - r.z ) * q.x;
+  A2 = a.y * q.z - a.z * q.y;
+  B2 = b.y * q.z - b.z * q.y;
+  C2 = c.y * q.z - c.z * q.y;
+  D2 = ( d.y - r.y ) * q.z - ( d.z - r.z ) * q.y;
+
+  A = A2 * C1 - A1 * C2;
+  B = A2 * D1 - A1 * D2 + B2 * C1 - B1 * C2;
+  C =                     B2 * D1 - B1 * D2;
+
+  D = Pow2( B ) - 4 * A * C;
+
+  if ( 0 < D )
+  {
+    Tex0.y = ( -B - sqrt( D ) ) / ( 2 * A );
+    Tex1.y = ( -B + sqrt( D ) ) / ( 2 * A );
+
+    Tex0.x = CalcU( Tex0.y );
+    Tex1.x = CalcU( Tex1.y );
+
+    return true;
+  }
+  else return false;
+}
+
+vec3 BiPatch( in vec2 PatP )
+{
+  return a * PatP.x * PatP.y
+       + b * PatP.x
+       + c          * PatP.y
+       + d;
+}
+
+vec3 BiPatchNormal( in vec2 PatP )
+{
+  vec3 T, B;
+
+  T = a * PatP.y + b;
+  B = a * PatP.x + c;
+
+  return normalize( cross( T, B ) );
+}
+
+bool CalcRayT( in vec3 RayP, in vec3 RayV,
+               in vec2 PatT,
+               out vec3 HitP, out float HitT )
+{
+  if ( ( 0 <= PatT.x ) && ( PatT.x <= 1 )
+    && ( 0 <= PatT.y ) && ( PatT.y <= 1 ) )
+  {
+    HitP = BiPatch( PatT );
+
+    HitT = dot( HitP - RayP, RayV );
+
+    return ( 0 < HitT );
+  }
+  else return false;
+}
+
+void ObjBiPat( in TRay Ray, inout THit Hit )
+{
+  const vec3 P00 = vec3( -1, +1, -1 );
+  const vec3 P01 = vec3( +1, -1, -1 );
+  const vec3 P10 = vec3( -1, -1, +1 );
+  const vec3 P11 = vec3( +1, +1, +1 );
+  vec2  Tex0, Tex1;
+  vec3  P;
+  float T;
+
+  if ( BilinearPatch( Ray.Pos, Ray.Vec, P00, P01, P10, P11, Tex0, Tex1 ) )
+  {
+    if ( CalcRayT( Ray.Pos, Ray.Vec, Tex0, P, T ) && ( T < Hit.t ) )
+    {
+      Hit.t   = T;
+      Hit.Pos = P;
+      Hit.Nor = BiPatchNormal( Tex0 );
+      Hit.Mat = 1;
+    }
+
+    if ( CalcRayT( Ray.Pos, Ray.Vec, Tex1, P, T ) && ( T < Hit.t ) )
+    {
+      Hit.t   = T;
+      Hit.Pos = P;
+      Hit.Nor = BiPatchNormal( Tex1 );
+      Hit.Mat = 1;
+    }
+  }
+}
+
+void ObjBiPat2( in TRay Ray, inout THit Hit )
+{
+  vec3  P00, P01, P02,
+        P10, P11, P12,
+        P20, P21, P22,
+        MinP, MaxP;
+  float T0, T1, MinT;
+  int   IncA, OutA, A, N;
+
+  P00 = vec3( -1, +1, -1 );  P01 = vec3( +1, -1, -1 );
+  P10 = vec3( -1, -1, +1 );  P11 = vec3( +1, +1, +1 );
+
+  MinP = min( min( P00, P01 ), min( P10, P11 ) );
+  MaxP = max( max( P00, P01 ), max( P10, P11 ) );
+
+  if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, T0, T1, IncA, OutA ) && ( FLOAT_EPS2 < T1 ) )
+  {
+    MinT = Hit.t;
+
+    for ( N = 1; N <= 10; N++ )
+    {
+      P00 = P00;  P02 = P01;
+      P20 = P10;  P22 = P11;
+
+      P01 = ( P00 + P02 ) / 2;
+      P10 = ( P00 + P20 ) / 2;
+      P11 = ( P00 + P02 + P20 + P22 ) / 4;
+      P12 = ( P02 + P22 ) / 2;
+      P21 = ( P20 + P22 ) / 2;
+
+      A = 0;
+
+      MinP = min( min( P00, P01 ), min( P10, P11 ) );
+      MaxP = max( max( P00, P01 ), max( P10, P11 ) );
+      if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, T0, T1, IncA, OutA ) && ( T0 < MinT ) )
+      {
+        MinT = T0;  A = 1;
+      }
+
+      MinP = min( min( P01, P02 ), min( P11, P12 ) );
+      MaxP = max( max( P01, P02 ), max( P11, P12 ) );
+      if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, T0, T1, IncA, OutA ) && ( T0 < MinT ) )
+      {
+        MinT = T0;  A = 2;
+      }
+
+      MinP = min( min( P10, P11 ), min( P20, P21 ) );
+      MaxP = max( max( P10, P11 ), max( P20, P21 ) );
+      if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, T0, T1, IncA, OutA ) && ( T0 < MinT ) )
+      {
+        MinT = T0;  A = 3;
+      }
+
+      MinP = min( min( P11, P12 ), min( P21, P22 ) );
+      MaxP = max( max( P11, P12 ), max( P21, P22 ) );
+      if ( HitAABB( Ray.Pos, Ray.Vec, MinP, MaxP, T0, T1, IncA, OutA ) && ( T0 < MinT ) )
+      {
+        MinT = T0;  A = 4;
+      }
+
+      switch ( A )
+      {
+        case 0: return;
+        case 1:
+            P00 = P00;  P01 = P01;
+            P10 = P10;  P11 = P11;
+          break;
+        case 2:
+            P00 = P01;  P01 = P02;
+            P10 = P11;  P11 = P12;
+          break;
+        case 3:
+            P00 = P10;  P01 = P11;
+            P10 = P20;  P11 = P21;
+          break;
+        case 4:
+            P00 = P11;  P01 = P12;
+            P10 = P21;  P11 = P22;
+          break;
+      }
+    }
+
+    Hit.t   = MinT;
+    //Hit.Pos = P;
+    //Hit.Nor = normalize( MathGrad( P ) );
+    //Hit.Mat = 1;
+  }
+}
+
 void ObjImpli( in TRay Ray, inout THit Hit )
 {
-  const vec3  MinP = vec3( -1, -1, -1 ) - FLOAT_EPS2;
-  const vec3  MaxP = vec3( +1, +1, +1 ) + FLOAT_EPS2;
+  const vec3  MinP = vec3( -5, -1, -5 ) + FLOAT_EPS2;
+  const vec3  MaxP = vec3( +5, +1, +5 ) - FLOAT_EPS2;
   const float Td   = 0.1;
   const float T2d  = 1.5 * Td/2;
 
@@ -872,7 +1110,7 @@ void ObjImpli( in TRay Ray, inout THit Hit )
         Hit.t   = T;
         Hit.Pos = P;
         Hit.Nor = normalize( MathGrad( P ) );
-        Hit.Mat = 2;
+        Hit.Mat = 1;
 
         break;
       }
@@ -994,10 +1232,11 @@ void Raytrace( inout TRay Ray )
 
     ///// 物体
 
-    ObjPlane( Ray, Hit );
+    //ObjPlane( Ray, Hit );
     //ObjSpher( Ray, Hit );
     //ObjRecta( Ray, Hit );
     ObjImpli( Ray, Hit );
+    //ObjBiPat( Ray, Hit );
 
     ///// 材質
 
