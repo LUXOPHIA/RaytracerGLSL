@@ -6,7 +6,6 @@ object Form1: TForm1
   Caption = 'RaytracerGLSL'
   ClientHeight = 666
   ClientWidth = 840
-  Position = ScreenCenter
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
@@ -93,8 +92,8 @@ object Form1: TForm1
         Size.Height = 600.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 800.000000000000000000
-        Viewport.Height = 600.000000000000000000
+        Viewport.Width = 796.000000000000000000
+        Viewport.Height = 596.000000000000000000
       end
     end
   end

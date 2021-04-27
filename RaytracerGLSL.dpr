@@ -59,7 +59,6 @@ uses
   LUX.GPU.OpenGL.Atom.Textur.D2.Preset in '_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\Atom\Textur\D2\LUX.GPU.OpenGL.Atom.Textur.D2.Preset.pas',
   LUX.GPU.OpenGL.Atom.Textur.D1.Preset in '_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\Atom\Textur\D1\LUX.GPU.OpenGL.Atom.Textur.D1.Preset.pas',
   LUX.Color in '_LIBRARY\LUXOPHIA\LUX\Color\LUX.Color.pas',
-  LUX.FMX in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.pas',
   LUX.Random.Xorshift in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.Xorshift.pas',
   LUX.Random.Xoshiro in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.Xoshiro.pas',
   LUX.Random.LCG in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.LCG.pas',
@@ -110,7 +109,9 @@ uses
   LUX.Color.Grid.D1 in '_LIBRARY\LUXOPHIA\LUX\Color\_FMX\LUX.Color.Grid.D1.pas',
   LUX.Color.Grid.D1.Preset in '_LIBRARY\LUXOPHIA\LUX\Color\_FMX\LUX.Color.Grid.D1.Preset.pas',
   LUX.Color.Grid.D2 in '_LIBRARY\LUXOPHIA\LUX\Color\_FMX\LUX.Color.Grid.D2.pas',
-  LUX.Data.Dictionary in '_LIBRARY\LUXOPHIA\LUX\Data\Dictionary\LUX.Data.Dictionary.pas';
+  LUX.Data.Dictionary in '_LIBRARY\LUXOPHIA\LUX\Data\Dictionary\LUX.Data.Dictionary.pas',
+  LUX.FMX.Pratform in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.Pratform.pas',
+  LUX.FMX.Messaging.Win in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.Messaging.Win.pas';
 
 {$R *.res}
 
