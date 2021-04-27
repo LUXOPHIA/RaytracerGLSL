@@ -132,7 +132,7 @@ writeonly uniform image2D _Imager;
 
 layout( std430 ) buffer TCamera
 {
-  layout( row_major ) mat4 _Camera;
+  mat4 _Camera;
 };
 
 uniform sampler2D _Textur;
