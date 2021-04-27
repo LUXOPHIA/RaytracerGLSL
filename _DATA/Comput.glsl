@@ -80,7 +80,7 @@ writeonly uniform image2D _Imager;                                              
 
 layout( std430 ) buffer TCamera                                                 // SSBO の宣言
 {
-  layout( row_major ) mat4 _Camera;                                             // 4x4行列変数の宣言
+  mat4 _Camera;                                                                 // 4x4行列変数の宣言
 };
 
 uniform sampler2D _Textur;                                                      // テクスチャオブジェクトの宣言
