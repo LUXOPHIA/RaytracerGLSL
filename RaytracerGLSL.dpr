@@ -59,7 +59,6 @@ uses
   LUX.GPU.OpenGL.Atom.Textur.D2.Preset in '_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\Atom\Textur\D2\LUX.GPU.OpenGL.Atom.Textur.D2.Preset.pas',
   LUX.GPU.OpenGL.Atom.Textur.D1.Preset in '_LIBRARY\LUXOPHIA\LUX.GPU.OpenGL\Atom\Textur\D1\LUX.GPU.OpenGL.Atom.Textur.D1.Preset.pas',
   LUX.Color in '_LIBRARY\LUXOPHIA\LUX\Color\LUX.Color.pas',
-  LUX.FMX in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.pas',
   LUX.Random.Xorshift in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.Xorshift.pas',
   LUX.Random.Xoshiro in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.Xoshiro.pas',
   LUX.Random.LCG in '_LIBRARY\LUXOPHIA\LUX\Random\LUX.Random.LCG.pas',
@@ -113,12 +112,16 @@ uses
   LUX.Data.Dictionary in '_LIBRARY\LUXOPHIA\LUX\Data\Dictionary\LUX.Data.Dictionary.pas',
   LUX.Data.Grid.T3.D3 in '_LIBRARY\LUXOPHIA\LUX\Data\Grid\LUX.Data.Grid.T3.D3.pas',
   LUX.Data.Grid.T3 in '_LIBRARY\LUXOPHIA\LUX\Data\Grid\LUX.Data.Grid.T3.pas',
-  LUX.Curve.T1.D2 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T1.D2.pas',
-  LUX.Curve.T1.D3 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T1.D3.pas',
-  LUX.Curve.T2.D1 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T2.D1.pas',
-  LUX.Curve.T2.D2 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T2.D2.pas',
-  LUX.Curve.T2.D3 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T2.D3.pas',
-  LUX.Curve.T1.D1 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.T1.D1.pas';
+  LUX.Curve.D2 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.D2.pas',
+  LUX.Curve in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.pas',
+  LUX.Curve.Poly in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.Poly.pas',
+  LUX.Curve.Bezier.D2 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.Bezier.D2.pas',
+  LUX.Curve.Bezier in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.Bezier.pas',
+  LUX.Curve.BSpline.D2 in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.BSpline.D2.pas',
+  LUX.Curve.BSpline in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.BSpline.pas',
+  LUX.Curve.CatRom in '_LIBRARY\LUXOPHIA\LUX\Curve\LUX.Curve.CatRom.pas',
+  LUX.FMX.Messaging.Win in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.Messaging.Win.pas',
+  LUX.FMX.Pratform in '_LIBRARY\LUXOPHIA\LUX\FMX\LUX.FMX.Pratform.pas';
 
 {$R *.res}
 
