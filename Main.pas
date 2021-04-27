@@ -19,7 +19,7 @@ uses
   LUX.GPU.OpenGL.Atom.Imager.D2.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D1.Preset,
   LUX.GPU.OpenGL.Atom.Textur.D2.Preset,
-  LUX.GPU.OpenGL.Comput;
+  LUX.GPU.OpenGL.Comput, FMX.Memo.Types;
 
 type
   TForm1 = class(TForm)
